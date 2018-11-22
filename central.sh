@@ -21,4 +21,5 @@ az vm create -n central-vm \
     --nsg "" \
     --vnet-name central-net \
     --subnet server-sub \
-    --storage-sku Standard_LRS
+    --storage-sku Standard_LRS \
+    --no-wait
