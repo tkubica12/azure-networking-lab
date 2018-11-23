@@ -218,12 +218,95 @@ ssh tomas@jump
         sudo tcpdump port 80 
 
 # Configure VPN gateway to connect to on-premises environment and check routing
+export onpremVpnIp="137.117.230.128"
+az network local-gateway create --gateway-ip-address $onpremVpnIp \
+    --name $podName-onprem --resource-group $podName-rg \
+    --local-address-prefixes 10.254.0.0/16
+az network vpn-connection create --name $podName-to-onprem \
+    --resource-group $podName-rg --vnet-gateway1 $podName-vpn \
+    -l westeurope --shared-key Azure12345678 --local-gateway2 $podName-onprem
+
+# Check app1 can access onprem VM and check app1 effective routes
+ssh tomas@jump
+    ssh tomas@10.x.16.4
+        ping 10.254.0.4
+
+az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
 
 # Note spoke1 cannot talk to spoke2 currently
 # Create network virtual appliance (we will use Linux box) to enable routing and inspection of selected traffic and provide Internet connectivity
+## Create appliance subnet and Linux VM. We will create NIC before so we can enable IP forwarding (ability to receive traffic not targeted to VM itself)
+az network vnet subnet create -g $podName-rg --vnet-name $podName-hub-net \
+    -n ngfw-int --address-prefix 10.$podNumber.3.0/26
+az network nic create -g $podName-rg --vnet-name $podName-hub-net \
+    --subnet ngfw-int -n $podName-ngfw-nic --ip-forwarding
+az vm create -n $podName-ngfw-vm \
+    -g $podName-rg \
+    --image ubuntults \
+    --size Standard_B1s \
+    --admin-username tomas \
+    --admin-password Azure12345678 \
+    --authentication-type password \
+    --nics $podName-ngfw-nic \
+    --storage-sku Standard_LRS \
+    --no-wait
 
-# Configure sub1 in spoke1 and sub1 in spoke2 to get inspected by network appliance (such as NGFW)
+## Configure Linux box as router and start tcpdump for host app1
+ssh tomas@$jump
+    ssh tomas@10.x.3.4
+        sudo ufw disable
+        sudo sysctl -w net.ipv4.ip_forward=1
+        echo net.ipv4.ip_forward = 0 | sudo tee /etc/sysctl.conf
+        sudo tcpdump host 10.x.16.4  # We should not see any traffic
 
-# Configure solution to put network appliance (such as NGFW) between VPN gateway and some Azure subnets
+## Configure routing rule from spoke1/sub1 with your Linux box as next hop (service insertion)
+az network route-table create -g $podName-rg -n $podName-routes
+az network route-table route create -g $podName-rg --route-table-name $podName-routes \
+    -n toNGFW --next-hop-type VirtualAppliance \
+    --address-prefix 0.0.0.0/0 --next-hop-ip-address 10.$podNumber.3.4
+az network vnet subnet update -g $podName-rg -n sub1 \
+    --vnet-name $podName-spoke1-net --route-table $podName-routes
+
+## Connect to app1 via jump server in new session
+## Ping 10.x.32.100 - does not work. Look into tcpdump on Linux router. 
+## You should see packets comming in, but no response comming back.
+## Configure service insertion also on web subnet
+az network vnet subnet update -g $podName-rg -n sub1 \
+    --vnet-name $podName-spoke2-net --route-table $podName-routes
+
+## Test curl from app1 to web lb again. Should work now.
+
+## Test ping to onprem from app1 - it should work.
+## Nevertheless check effective routes on app1 - it currently goes directly bypassing Linux router
+ssh tomas@jump
+    ssh tomas@10.x.16.4
+        ping 10.254.0.4
+
+az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
+
+## We will now want traffic between app1 and onprem to be inspected by Linux router.
+## As route to 10.254.0.0/16 via GW directly is more specific we need to add our own route for this range via Linux router
+az network route-table route create -g $podName-rg --route-table-name $podName-routes \
+    -n toOnpremViaNGFW --next-hop-type VirtualAppliance \
+    --address-prefix 10.254.0.0/16 --next-hop-ip-address 10.$podNumber.3.4
+ssh tomas@jump
+    ssh tomas@10.x.16.4
+        ping 10.254.0.4
+
+az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
+
+## Go to Linux router and do sudo tcpdump icmp. We see packets only in one direction!
+## Returning traffic should not go directly so we need to modify routing on GatewaySubnet in hub network
+az network route-table create -g $podName-rg -n $podName-gwRoutes
+az network route-table route create -g $podName-rg --route-table-name $podName-gwRoutes \
+    -n toNGFW --next-hop-type VirtualAppliance \
+    --address-prefix 10.$podNumber.16.0/24 --next-hop-ip-address 10.$podNumber.3.4
+az network vnet subnet update -g $podName-rg -n GatewaySubnet \
+    --vnet-name $podName-hub-net --route-table $podName-gwRoutes
+
+
+# Enhance our Linux router to provide access to Internet. 
+## Create additional NIC, public IP, associate with NIC and attach to VM
+## Configure Linux router for NAT via iptables and modify its routing rules
 
 # Expose web application to internet via reverse proxy appliance (we will use NGINX, but F5 or Imperva is conceptualy similar)

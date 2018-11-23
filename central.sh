@@ -23,3 +23,14 @@ az vm create -n central-vm \
     --subnet server-sub \
     --storage-sku Standard_LRS \
     --no-wait
+
+az network public-ip show -n central-vpn-ip -g central-rg
+
+export vpnIp1="23.97.175.85"
+export vpnRange1="10.1.0.0/16"
+az network local-gateway create --gateway-ip-address $vpnIp1 \
+    --name central-$vpnIp1 --resource-group central-rg \
+    --local-address-prefixes $vpnRange1
+az network vpn-connection create --name central-to-$vpnIp1 \
+    --resource-group central-rg --vnet-gateway1 central-vpn \
+    -l westeurope --shared-key Azure12345678 --local-gateway2 central-$vpnIp1
