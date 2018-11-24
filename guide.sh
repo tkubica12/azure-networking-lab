@@ -256,7 +256,7 @@ ssh tomas@$jump
     ssh tomas@10.x.3.4
         sudo ufw disable
         sudo sysctl -w net.ipv4.ip_forward=1
-        echo net.ipv4.ip_forward = 0 | sudo tee /etc/sysctl.conf
+        echo net.ipv4.ip_forward = 1 | sudo tee /etc/sysctl.conf
         sudo tcpdump host 10.x.16.4  # We should not see any traffic
 
 ## Configure routing rule from spoke1/sub1 with your Linux box as next hop (service insertion)
@@ -306,7 +306,35 @@ az network vnet subnet update -g $podName-rg -n GatewaySubnet \
 
 
 # Enhance our Linux router to provide access to Internet. 
-## Create additional NIC, public IP, associate with NIC and attach to VM
+## First turn of VM
+az vm deallocate -n $podName-ngfw-vm -g $podName-rg
+
+## Create additional subnet, NIC, public IP, associate with NIC and attach to VM and start
+az network vnet subnet create -g $podName-rg --vnet-name $podName-hub-net \
+    -n ngfw-ext --address-prefix 10.$podNumber.3.64/26
+az network public-ip create -n $podName-ngfw-ip -g $podName-rg
+az network nic create -g $podName-rg --vnet-name $podName-hub-net \
+    --subnet ngfw-ext -n $podName-ngfw-nic-ext --ip-forwarding \
+    --public-ip-address $podName-ngfw-ip
+az vm nic add -g $podName-rg --vm-name $podName-ngfw-vm \
+    --nics $podName-ngfw-nic-ext
+az vm start -n $podName-ngfw-vm -g $podName-rg
+
 ## Configure Linux router for NAT via iptables and modify its routing rules
+ssh tomas@$jump
+    ssh tomas@10.x.3.4
+        sudo ip route add 10.0.0.0/8 via 10.1.3.1 dev eth0
+        sudo ip route change 0.0.0.0/0 via 10.1.3.65 dev eth1
+        sudo iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+        sudo iptables -A FORWARD -i eth1 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+        sudo iptables -A FORWARD -i eth0 -o eth1 -j ACCEPT
+        echo sudo ip route add 10.0.0.0/8 via 10.1.3.1 dev eth0 | sudo tee /etc/rc.local
+        echo sudo ip route change 0.0.0.0/0 via 10.1.3.65 dev eth1 | sudo tee /etc/rc.local
+        echo sudo iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE | sudo tee /etc/rc.local
+        echo sudo iptables -A FORWARD -i eth1 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT | sudo tee /etc/rc.local
+        echo sudo iptables -A FORWARD -i eth0 -o eth1 -j ACCEPT | sudo tee /etc/rc.local
+
+## Check connectivity from app1 to Internet - should work
+## Use tcpdump on Linux router to make sure traffic goes via this device
 
 # Expose web application to internet via reverse proxy appliance (we will use NGINX, but F5 or Imperva is conceptualy similar)
