@@ -304,6 +304,13 @@ az network route-table route create -g $podName-rg --route-table-name $podName-g
 az network vnet subnet update -g $podName-rg -n GatewaySubnet \
     --vnet-name $podName-hub-net --route-table $podName-gwRoutes
 
+# Monitoring and troubleshooting
+## Prepare storage account and log analytics workspace
+## Use Azure Monitor to do packet capture
+## Configure logging to storage account for load balancer and NSGs
+## Turn on Traffic Analyses in Azure Monitor
+## Configure Connection Monitor
+
 
 # Enhance our Linux router to provide access to Internet. 
 ## First turn of VM
@@ -337,4 +344,8 @@ ssh tomas@$jump
 ## Check connectivity from app1 to Internet - should work
 ## Use tcpdump on Linux router to make sure traffic goes via this device
 
+
 # Expose web application to internet via reverse proxy appliance (we will use NGINX, but F5 or Imperva is conceptualy similar)
+# Use redundant pair of reverse proxy together with one internal and one external Azure Load Balancer
+
+# Automate environment using desired state Azure Resource Manager templates
