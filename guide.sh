@@ -345,7 +345,101 @@ ssh tomas@$jump
 ## Use tcpdump on Linux router to make sure traffic goes via this device
 
 
+
+# PaaS services such as SQL network integration
+## Create small Azure SQL Database
+az sql server create -l westeurope -g $podName-rg \
+    -n $podName-db-srv -u tomas -p Azure12345678
+az sql db create -g $podName-rg -s $podName-db-srv \
+    -n $podName-db --service-objective Basic --edition Basic
+
+## Install SqlCmd utility on app1 server. User access to DB should fail since there is no whitelist on DB firewall.
+ssh tomas@$jump
+    ssh tomas@10.x.16.4
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+        sudo apt-get update 
+        sudo apt-get install mssql-tools unixodbc-dev -y
+        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
+        source ~/.bashrc
+        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should fail, not src IP is your Linux router (NGFW) IP
+
+## Configure DB firewall to allow access from NGFW only and make sure app1 can communicate.
+export ngfwIp=$(az network public-ip show -n tomas-ngfw-ip -g $podName-rg --query ipAddress -o tsv)
+az sql server firewall-rule create -g $podName-rg \
+    -s $podName-db-srv -n allowNgfw \
+    --start-ip-address $ngfwIp --end-ip-address $ngfwIp
+
+## Check again access from app1
+ssh tomas@$jump
+    ssh tomas@10.x.16.4
+        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should work
+
+## Remove Linux router IP from DB firewall
+az sql server firewall-rule delete -g $podName-rg -s $podName-db-srv -n allowNgfw
+
+## Check again access from app1
+ssh tomas@$jump
+    ssh tomas@10.x.16.4
+        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should fail
+
+## Configure direct link between subnet and PaaS with Service Endpoint
+az network vnet subnet update -g $podName-rg --vnet-name $podName-spoke1-net \
+    -n sub1 --service-endpoints Microsoft.Sql
+az sql server vnet-rule create -g $podName-rg -s $podName-db-srv \
+    -n linkForSQL --subnet sub1 --vnet-name $podName-spoke1-net
+
+## Check again access from app1
+ssh tomas@$jump
+    ssh tomas@10.x.16.4
+        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should work
+
+## Limit app1 access to Internet while preserving access to PaaS service
+az network nsg create -g $podName-rg -n $podName-spoke1-sub1-fw
+
+az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
+    -n allowSSHFromJump --priority 100 \
+    --source-address-prefixes 10.$podNumber.0.4/32 --source-port-ranges '*' \
+    --destination-address-prefixes '*' --destination-port-ranges 22 --access Allow \
+    --protocol Tcp --description "Allow SSH traffic from jump server"
+
+az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
+    -n denySSH --priority 105 \
+    --source-address-prefixes '*' --source-port-ranges '*' \
+    --destination-address-prefixes '*' --destination-port-ranges 22 --access Deny \
+    --protocol Tcp --description "Deny SSH traffic"
+
+az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
+    -n allowPaasSql --priority 100 \
+    --source-address-prefixes '*' --source-port-ranges '*' \
+    --destination-address-prefixes Sql.WestEurope --destination-port-ranges 1433 \
+    --access Allow --direction Outbound \
+    --protocol Tcp --description "Allow PaaS SQL traffic"
+
+az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
+    -n denyInternet --priority 105 \
+    --source-address-prefixes '*' --source-port-ranges '*' \
+    --destination-address-prefixes Internet --destination-port-ranges '*' \
+    --access Deny --direction Outbound \
+    --protocol '*' --description "Disable access to Internet"
+
+az network vnet subnet update -g $podName-rg -n sub1 \
+    --vnet-name $podName-spoke1-net --network-security-group $podName-spoke1-sub1-fw
+
+
 # Expose web application to internet via reverse proxy appliance (we will use NGINX, but F5 or Imperva is conceptualy similar)
 # Use redundant pair of reverse proxy together with one internal and one external Azure Load Balancer
+TODO
+
 
 # Automate environment using desired state Azure Resource Manager templates
+az group create -n $podName-new-rg -l westeurope
+## New Hub VNET and subnets
+az group deployment create -g $podName-new-rg \
+    --template-file 01net.json --parameters @01net.parameters.json
+## Add spoke networks to template
+az group deployment create -g $podName-new-rg \
+    --template-file 02net.json --parameters @02net.parameters.json
+## Add VNET peerings to template
+az group deployment create -g $podName-new-rg \
+    --template-file 03net.json --parameters @03net.parameters.json

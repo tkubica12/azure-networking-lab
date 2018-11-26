@@ -1,0 +1,120 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hubVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of your hub VNET"
+            }
+        },
+        "spokeVnets": {
+            "type": "object",
+            "metadata": {
+                "description": "Array of objects for spoke VNETs including name and prefix"
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "comments": "Hub VNET",
+            "apiVersion": "2015-06-15",
+            "name": "[parameters('hubVnetName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "jumpserver-subnet",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24"
+                        }
+                    },
+                    {
+                        "name": "shareservices-subnet",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/24"
+                        }
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "10.0.3.0/24"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "comments": "Spoke VNETs",
+            "copy": {
+                "name": "spokes",
+                "count": "[length(parameters('spokeVnets').vnets)]"
+            },
+            "apiVersion": "2015-06-15",
+            "name": "[parameters('spokeVnets').vnets[copyIndex()].vnetName]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('spokeVnets').vnets[copyIndex()].prefix]"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "comments": "Configure peerings from Hub to Spokes",
+            "copy": {
+                "name": "peerings",
+                "count": "[length(parameters('spokeVnets').vnets)]"
+            },
+            "dependsOn": [
+                "spokes",
+                "[parameters('hubVnetName')]"
+            ],
+            "name": "[concat(parameters('hubVnetName'), '/', parameters('hubVnetName'), '-to-', parameters('spokeVnets').vnets[copyIndex()].vnetName)]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('spokeVnets').vnets[copyIndex()].vnetName)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "comments": "Configure peerings from Spokes to Hub",
+            "copy": {
+                "name": "peerings",
+                "count": "[length(parameters('spokeVnets').vnets)]"
+            },
+            "dependsOn": [
+                "spokes",
+                "[parameters('hubVnetName')]"
+            ],
+            "name": "[concat(parameters('spokeVnets').vnets[copyIndex()].vnetName, '/', parameters('spokeVnets').vnets[copyIndex()].vnetName, '-to-', parameters('hubVnetName'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

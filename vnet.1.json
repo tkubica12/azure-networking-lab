@@ -1,0 +1,559 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnets": {
+            "type": "object"
+        },
+        "mainRegion": {
+            "type": "string",
+            "metadata": {
+                "description": "Main region where main servers and databases are deployed"
+            }
+        },
+        "dbSubnetRange": {
+            "type": "string",
+            "metadata": {
+                "description": "IP range for database subnet in main region"
+            }
+        },
+        "abSubnetRange": {
+            "type": "string",
+            "metadata": {
+                "description": "IP range for ab subnet in main region"
+            }
+        },
+        "secondaryDomainSubnetRange": {
+            "type": "string",
+            "metadata": {
+                "description": "IP range for domain subnet in main region"
+            }
+        },
+        "secondaryDomainServerIps": {
+            "type": "string",
+            "metadata": {
+                "description": "Fixed private IP for domain server in main region"
+            }
+        },
+        "abcSubnetRanges": {
+            "type": "array"
+        },
+        "abdbSubnetRanges": {
+            "type": "array"
+        },
+        "abcPrivatePorts": {
+            "type": "array"
+        },
+        "dbPrivatePorts": {
+            "type": "array"
+        },
+        "cPublicPorts": {
+            "type": "array"
+        },
+        "allPrivateRanges": {
+            "type": "string"
+        },
+        "envPrefix": {
+            "type": "string"
+        },
+        "vnetSuffix": {
+            "type": "string"
+        },
+        "cNsgNameSuffix": {
+            "type": "string"
+        },
+        "abNsgNameSuffix": {
+            "type": "string"
+        },
+        "dbNsgNameSuffix": {
+            "type": "string"
+        },
+        "domainNsgNameSuffix": {
+            "type": "string"
+        },
+        "jumpServerIps": {
+            "type": "array",
+            "metadata": {
+                "description": "IP addresses of one or more jump servers in office environment"
+            }
+        },
+        "portsFromJumpServer": {
+            "type": "array",
+            "metadata": {
+                "description": "Ports allowed from jump server to VMs such as RDP"
+            }
+        },
+        "primaryAdDnsIp": {
+            "type": "array",
+            "metadata": {
+                "description": "IP address of Active Directory and DNS server(s) in office environment"
+            }
+        },
+        "portsToPrimaryAdDnsIp": {
+            "type": "array",
+            "metadata": {
+                "description": "Ports allowed from VMs to AD/DNS server"
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "comments": "Iterate over vnets array of objects to create all VNETs",
+            "apiVersion": "2015-06-15",
+            "copy": {
+                "name": "vnets",
+                "count": "[length(parameters('vnets').vnets)]"
+            },
+            "dependsOn": [
+                "vnetsNsgC"
+            ],
+            "name": "[concat(parameters('vnets').vnets[copyIndex()].location, parameters('vnetSuffix'))]",
+            "location": "[parameters('vnets').vnets[copyIndex()].location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('vnets').vnets[copyIndex()].ipRange]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "cSubnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('vnets').vnets[copyIndex()].cSubnetRange]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('vnets').vnets[copyIndex()].location, parameters('cNsgNameSuffix')))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "comments": "Create database subnet in main region",
+            "name": "[concat(parameters('mainRegion'), parameters('vnetSuffix'), '/dbsubnet')]",
+            "dependsOn": [
+                "[concat(parameters('mainRegion'), parameters('vnetSuffix'))]",
+                "[concat(parameters('mainRegion'), parameters('dbNsgNameSuffix'))]"
+            ],
+            "apiVersion": "2018-04-01",
+            "location": "[parameters('mainRegion')]",
+            "properties": {
+                "addressPrefix": "[parameters('dbSubnetRange')]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('mainRegion'), parameters('dbNsgNameSuffix')))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "comments": "Create ab subnet in main region",
+            "name": "[concat(parameters('mainRegion'), parameters('vnetSuffix'), '/absubnet')]",
+            "dependsOn": [
+                "[concat(parameters('mainRegion'), parameters('vnetSuffix'))]",
+                "[concat(parameters('mainRegion'), parameters('abNsgNameSuffix'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('mainRegion'), parameters('vnetSuffix')), 'dbsubnet')]"
+            ],
+            "apiVersion": "2018-04-01",
+            "location": "[parameters('mainRegion')]",
+            "properties": {
+                "addressPrefix": "[parameters('abSubnetRange')]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('mainRegion'), parameters('abNsgNameSuffix')))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "comments": "Create domain subnet in main region",
+            "name": "[concat(parameters('mainRegion'), parameters('vnetSuffix'), '/domainsubnet')]",
+            "dependsOn": [
+                "[concat(parameters('mainRegion'), parameters('vnetSuffix'))]",
+                "[concat(parameters('mainRegion'), parameters('domainNsgNameSuffix'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('mainRegion'), parameters('vnetSuffix')), 'dbsubnet')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('mainRegion'), parameters('vnetSuffix')), 'absubnet')]"
+            ],
+            "apiVersion": "2018-04-01",
+            "location": "[parameters('mainRegion')]",
+            "properties": {
+                "addressPrefix": "[parameters('secondaryDomainSubnetRange')]",
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('mainRegion'), parameters('domainNsgNameSuffix')))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "comments": "Create NSG network rules for subnet of c type of servers",
+            "apiVersion": "2018-08-01",
+            "copy": {
+                "name": "vnetsNsgC",
+                "count": "[length(parameters('vnets').vnets)]"
+            },
+            "name": "[concat(parameters('vnets').vnets[copyIndex()].location, parameters('cNsgNameSuffix'))]",
+            "location": "[parameters('vnets').vnets[copyIndex()].location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "public-access",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('cPublicPorts')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "management-access",
+                        "properties": {
+                            "description": "Allow access from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsFromJumpServer')]",
+                            "sourceAddressPrefixes": "[parameters('jumpServerIps')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "abc-to-abc-access",
+                        "properties": {
+                            "description": "Allow access between abc-type VMs",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('abcPrivatePorts')]",
+                            "sourceAddressPrefixes": "[parameters('abcSubnetRanges')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "comments": "Create NSG network rules for subnet of ab type of servers",
+            "name": "[concat(parameters('mainRegion'), parameters('abNsgNameSuffix'))]",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('mainRegion')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allow-outbound-private",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "[parameters('allPrivateRanges')]",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-outbound-ad-dns",
+                        "properties": {
+                            "description": "Allow access to AD/DNS in office environment",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsToPrimaryAdDnsIp')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefixes": "[parameters('primaryAdDnsIp')]",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-outbound-secondary-ad-dns",
+                        "properties": {
+                            "description": "Allow access to secondary AD/DNS in main region",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsToPrimaryAdDnsIp')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "[parameters('secondaryDomainServerIps')]",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-azure-management-services",
+                        "properties": {
+                            "description": "Allow access to Azure management services",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "AzureCloud",
+                            "access": "Allow",
+                            "priority": 150,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "deny-outbound-internet",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "Internet",
+                            "access": "Deny",
+                            "priority": 200,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "abc-to-abc-access",
+                        "properties": {
+                            "description": "Allow access between abc-type VMs",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('abcPrivatePorts')]",
+                            "sourceAddressPrefixes": "[parameters('abcSubnetRanges')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "management-access",
+                        "properties": {
+                            "description": "Allow access from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsFromJumpServer')]",
+                            "sourceAddressPrefixes": "[parameters('jumpServerIps')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "comments": "Create NSG network rules for domain subnet",
+            "name": "[concat(parameters('mainRegion'), parameters('domainNsgNameSuffix'))]",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('mainRegion')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allow-outbound-private",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "[parameters('allPrivateRanges')]",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-outbound-ad-dns",
+                        "properties": {
+                            "description": "Allow access to AD/DNS in office environment",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsToPrimaryAdDnsIp')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefixes": "[parameters('primaryAdDnsIp')]",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-outbound-secondary-ad-dns",
+                        "properties": {
+                            "description": "Allow access to secondary AD/DNS in main region",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsToPrimaryAdDnsIp')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "[parameters('secondaryDomainServerIps')]",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-azure-management-services",
+                        "properties": {
+                            "description": "Allow access to Azure management services",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "AzureCloud",
+                            "access": "Allow",
+                            "priority": 150,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "deny-outbound-internet",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "Internet",
+                            "access": "Deny",
+                            "priority": 200,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "domain-access",
+                        "properties": {
+                            "description": "Allow access to domain and DNS services",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsToPrimaryAdDnsIp')]",
+                            "sourceAddressPrefix": "[parameters('allPrivateRanges')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "management-access",
+                        "properties": {
+                            "description": "Allow access from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsFromJumpServer')]",
+                            "sourceAddressPrefixes": "[parameters('jumpServerIps')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "comments": "Create NSG network rules for database subnet in main region",
+            "apiVersion": "2018-08-01",
+            "name": "[concat(parameters('mainRegion'), parameters('dbNsgNameSuffix'))]",
+            "location": "[parameters('mainRegion')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allow-outbound-private",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "[parameters('allPrivateRanges')]",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-outbound-ad-dns",
+                        "properties": {
+                            "description": "Allow access to AD/DNS in office environment",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsToPrimaryAdDnsIp')]",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefixes": "[parameters('primaryAdDnsIp')]",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "allow-azure-management-services",
+                        "properties": {
+                            "description": "Allow access to Azure management services",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "AzureCloud",
+                            "access": "Allow",
+                            "priority": 150,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "deny-outbound-internet",
+                        "properties": {
+                            "description": "Allow access from public",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "Internet",
+                            "access": "Deny",
+                            "priority": 200,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "abdb-to-db-access",
+                        "properties": {
+                            "description": "Allow access from abdb-type VMs to db VMs",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('dbPrivatePorts')]",
+                            "sourceAddressPrefixes": "[parameters('abdbSubnetRanges')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "management-access",
+                        "properties": {
+                            "description": "Allow access from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": "[parameters('portsFromJumpServer')]",
+                            "sourceAddressPrefixes": "[parameters('jumpServerIps')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
