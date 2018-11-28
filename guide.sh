@@ -2,6 +2,7 @@
 export podNumber=1
 export podName=tomas
 
+# ------------ Basic routing and VNET peering ------------
 # Create Resource Group
 az group create -n $podName-rg -l westeurope
 
@@ -101,6 +102,8 @@ az network vnet peering create -g $podName-rg -n spoke2-to-hub \
 # Check effective routes now, connect to app1 from jump server to check routing is OK
 az network nic show-effective-route-table --name $podName-jump-vmVMNic --resource-group $podName-rg -o table
 
+# ------------ Adding Network Security Groups ------------
+
 # We are going to create servers in spoke2. 
 # We will prepare FW rules (NSG) on subnet to permit only web(80) inbound, but ssh(22) only from jump server
 az network nsg create -g $podName-rg -n $podName-spoke2-sub1-fw
@@ -182,6 +185,8 @@ ssh tomas@$jump
         ssh tomas@10.x.32.4  # Should fail
         curl 10.x.32.4   # Should work
 
+# ------------ Using Azure Load Balancer ------------
+
 # Create Azure Load Balancer Standard and configure it for internal balancer
 # We will not use any session persistence so we can easily check balancing is working
 ## Create LB with private IP and backend pool
@@ -217,6 +222,8 @@ ssh tomas@jump
     ssh tomas@10.1.32.4
         sudo tcpdump port 80 
 
+# ------------ Connecting onpremises with VPN ------------
+
 # Configure VPN gateway to connect to on-premises environment and check routing
 export onpremVpnIp="137.117.230.128"
 az network local-gateway create --gateway-ip-address $onpremVpnIp \
@@ -232,6 +239,8 @@ ssh tomas@jump
         ping 10.254.0.4
 
 az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
+
+# ------------ Network Virtual Appliance ------------
 
 # Note spoke1 cannot talk to spoke2 currently
 # Create network virtual appliance (we will use Linux box) to enable routing and inspection of selected traffic and provide Internet connectivity
@@ -304,6 +313,8 @@ az network route-table route create -g $podName-rg --route-table-name $podName-g
 az network vnet subnet update -g $podName-rg -n GatewaySubnet \
     --vnet-name $podName-hub-net --route-table $podName-gwRoutes
 
+# ------------ Monitoring and troubleshooting ------------
+
 # Monitoring and troubleshooting
 ## Prepare storage account and log analytics workspace
 ## Use Azure Monitor to do packet capture
@@ -311,6 +322,7 @@ az network vnet subnet update -g $podName-rg -n GatewaySubnet \
 ## Turn on Traffic Analyses in Azure Monitor
 ## Configure Connection Monitor
 
+# ------------ Internet access via Network Virtual Appliance ------------
 
 # Enhance our Linux router to provide access to Internet. 
 ## First turn of VM
@@ -344,16 +356,17 @@ ssh tomas@$jump
 ## Check connectivity from app1 to Internet - should work
 ## Use tcpdump on Linux router to make sure traffic goes via this device
 
-
+# ------------ Connecting to PaaS services ------------
 
 # PaaS services such as SQL network integration
-## Create small Azure SQL Database
+## PaaS integration via Network Virtual Appliance
+### Create small Azure SQL Database
 az sql server create -l westeurope -g $podName-rg \
     -n $podName-db-srv -u tomas -p Azure12345678
 az sql db create -g $podName-rg -s $podName-db-srv \
     -n $podName-db --service-objective Basic --edition Basic
 
-## Install SqlCmd utility on app1 server. User access to DB should fail since there is no whitelist on DB firewall.
+### Install SqlCmd utility on app1 server. User access to DB should fail since there is no whitelist on DB firewall.
 ssh tomas@$jump
     ssh tomas@10.x.16.4
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
@@ -364,37 +377,38 @@ ssh tomas@$jump
         source ~/.bashrc
         sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should fail, not src IP is your Linux router (NGFW) IP
 
-## Configure DB firewall to allow access from NGFW only and make sure app1 can communicate.
+### Configure DB firewall to allow access from NGFW only and make sure app1 can communicate.
 export ngfwIp=$(az network public-ip show -n tomas-ngfw-ip -g $podName-rg --query ipAddress -o tsv)
 az sql server firewall-rule create -g $podName-rg \
     -s $podName-db-srv -n allowNgfw \
     --start-ip-address $ngfwIp --end-ip-address $ngfwIp
 
-## Check again access from app1
+### Check again access from app1
 ssh tomas@$jump
     ssh tomas@10.x.16.4
         sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should work
 
-## Remove Linux router IP from DB firewall
+## Direct PaaS integration via Service Endpoint
+### Remove Linux router IP from DB firewall
 az sql server firewall-rule delete -g $podName-rg -s $podName-db-srv -n allowNgfw
 
-## Check again access from app1
+### Check again access from app1
 ssh tomas@$jump
     ssh tomas@10.x.16.4
         sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should fail
 
-## Configure direct link between subnet and PaaS with Service Endpoint
+### Configure direct link between subnet and PaaS with Service Endpoint
 az network vnet subnet update -g $podName-rg --vnet-name $podName-spoke1-net \
     -n sub1 --service-endpoints Microsoft.Sql
 az sql server vnet-rule create -g $podName-rg -s $podName-db-srv \
     -n linkForSQL --subnet sub1 --vnet-name $podName-spoke1-net
 
-## Check again access from app1
+### Check again access from app1
 ssh tomas@$jump
     ssh tomas@10.x.16.4
         sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should work
 
-## Limit app1 access to Internet while preserving access to PaaS service
+### Limit app1 access to Internet while preserving access to PaaS service
 az network nsg create -g $podName-rg -n $podName-spoke1-sub1-fw
 
 az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
@@ -426,11 +440,15 @@ az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
 az network vnet subnet update -g $podName-rg -n sub1 \
     --vnet-name $podName-spoke1-net --network-security-group $podName-spoke1-sub1-fw
 
+## Direct PaaS integration via private PaaS endpoint (preview feature)
+
+# ------------ Exposing apps to Internet via reverse proxy ------------
 
 # Expose web application to internet via reverse proxy appliance (we will use NGINX, but F5 or Imperva is conceptualy similar)
 # Use redundant pair of reverse proxy together with one internal and one external Azure Load Balancer
 TODO
 
+# ------------ Automation (Infrastructure as Code) ------------
 
 # Automate environment using desired state Azure Resource Manager templates
 az group create -n $podName-new-rg -l westeurope
