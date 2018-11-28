@@ -5,9 +5,12 @@ This lab will guide you throw creation of enterprise networking environment in A
 * Hub-and-spoke topology with VNET peering
 * Load balancing
 * Network Security Groups
+* Using jump server to enhance security
 * VPN connectivity to on-premises
 * Adding 3rd party routing/firewalling device (like NGFW) for traffic between spokes (using Linux router)
 * Using 3rd party routing/firewalling for Internet access (using Linux router)
+* IaaS to PaaS integration via 3rd party routing/firewall (using Linux router)
+* IaaS to PaaS direct integration via Service Endpoints
 * Deploying 3rd party reverse proxy (like WAF) in HA to securely expose apps to Internet (using NGINX)
 * Using ARM templates for automation
 

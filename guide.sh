@@ -565,3 +565,4 @@ az group deployment create -g $podName-new-rg \
 ## Add VNET peerings to template
 az group deployment create -g $podName-new-rg \
     --template-file 03net.json --parameters @03net.parameters.json
+##
