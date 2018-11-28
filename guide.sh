@@ -441,12 +441,116 @@ az network vnet subnet update -g $podName-rg -n sub1 \
     --vnet-name $podName-spoke1-net --network-security-group $podName-spoke1-sub1-fw
 
 ## Direct PaaS integration via private PaaS endpoint (preview feature)
+TODO
 
 # ------------ Exposing apps to Internet via reverse proxy ------------
 
 # Expose web application to internet via reverse proxy appliance (we will use NGINX, but F5 or Imperva is conceptualy similar)
 # Use redundant pair of reverse proxy together with one internal and one external Azure Load Balancer
-TODO
+## Create additional subnet for reverse proxy
+az network vnet subnet create -g $podName-rg --vnet-name $podName-hub-net \
+    -n rp --address-prefix 10.$podNumber.3.128/26
+
+## Prepare NSG to allow traffic from Internet to reverse proxy
+az network nsg create -g $podName-rg -n $podName-hub-rp-fw
+
+az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
+    -n allowSSHFromJump --priority 100 \
+    --source-address-prefixes 10.$podNumber.0.4/32 --source-port-ranges '*' \
+    --destination-address-prefixes '*' --destination-port-ranges 22 --access Allow \
+    --protocol Tcp --description "Allow SSH traffic from jump server"
+
+az network nsg rule create -g $podName-rg --nsg-name $podName-hub-rp-fw \
+    -n allowInternetAccess --priority 110 \
+    --source-address-prefixes '*' --source-port-ranges '*' \
+    --destination-address-prefixes '*' --destination-port-ranges 8080-8090 --access Allow \
+    --protocol Tcp --description "Allow access from Internet to reverse proxy ports"
+
+## Create reverse proxy NVAs in hub network
+az vm create -n $podName-rp1-vm \
+    -g $podName-rg \
+    --image ubuntults \
+    --size Standard_B1s \
+    --zone 1 \
+    --admin-username tomas \
+    --admin-password Azure12345678 \
+    --authentication-type password \
+    --nsg $podName-hub-rp-fw \
+    --public-ip-address "" \
+    --vnet-name $podName-hub-net \
+    --subnet rp \
+    --storage-sku Standard_LRS \
+    --no-wait
+
+az vm create -n $podName-rp2-vm \
+    -g $podName-rg \
+    --image ubuntults \
+    --size Standard_B1s \
+    --zone 2 \
+    --admin-username tomas \
+    --admin-password Azure12345678 \
+    --authentication-type password \
+    --nsg $podName-hub-rp-fw \
+    --public-ip-address "" \
+    --vnet-name $podName-hub-net \
+    --subnet rp \
+    --storage-sku Standard_LRS \
+    --no-wait
+
+## Create Azure Load Balancer with public IP and configure rules and pools
+az network public-ip create -g $podName-rg -n $podName-rp-ip \
+    --dns-name $podName-wapp998 --sku Standard
+
+az network lb create -g $podName-rg -n $podName-rp-lb --sku Standard \
+    --backend-pool-name rp-pool --public-ip-address $podName-rp-ip 
+
+az network lb probe create --resource-group $podName-rg \
+    --lb-name $podName-rp-lb --name myHealthProbe \
+    --protocol tcp --port 8080
+
+az network lb rule create --resource-group $podName-rg \
+    --lb-name $podName-rp-lb --name app1 \
+    --protocol tcp --frontend-port 80 --backend-port 8080 \
+    --frontend-ip-name LoadBalancerFrontEnd \
+    --backend-pool-name rp-pool \
+    --probe-name myHealthProbe
+
+az network nic ip-config address-pool add -g $podName-rg \
+    --nic-name $podName-rp1-vmVMNic -n ipconfig$podName-rp1-vm \
+    --address-pool rp-pool --lb-name $podName-rp-lb
+az network nic ip-config address-pool add -g $podName-rg \
+    --nic-name $podName-rp2-vmVMNic -n ipconfig$podName-rp2-vm \
+    --address-pool rp-pool --lb-name $podName-rp-lb
+
+## Install and configure NGINX on both NVAs
+## Note we will use server_name as DNS entry we configured for LB NIC.
+## This way you can create multiple records on your DNS server (such as Azure DNS)
+## and host unlimited number of applications on single frontend IP and RP port.
+## With TLS you will use SNI to enable that (certificate per app as an example)
+## Nevertheless you can also add additional Public IP on Azure LB and create rule to point
+## to different RP port such as 8081. This way you can for example have 2 apps
+## running on different public IPs.
+ssh tomas@$jump
+    ssh tomas@10.x.3.132
+        sudo apt update && sudo apt install nginx -y
+        sudo nano /etc/nginx/conf.d/myapp.conf  # Use following configuration - replace name with your name and proxy_pass with your webapp LB IP
+
+server {
+  listen 8080;
+
+  server_name tomas-wapp998.westeurope.cloudapp.azure.com;
+
+  location / {
+      proxy_pass http://10.x.32.100/;
+  }
+}
+
+
+
+        sudo nginx -s reload
+
+# Repeat for second NGINX (10.x.3.132)
+# Use your browser to open $podName-wapp998.westeurope.cloudapp.azure.com - should work
 
 # ------------ Automation (Infrastructure as Code) ------------
 
