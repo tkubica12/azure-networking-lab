@@ -21,58 +21,46 @@
                     "addressPrefixes": [
                         "10.0.0.0/20"
                     ]
-                }
-            },
-            "resources": [
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "jumpserver-sub",
-                    "properties": {
-                        "addressPrefix": "10.0.0.0/24"
-                    }
                 },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "sharedservices-sub",
-                    "properties": {
-                        "addressPrefix": "10.0.1.0/24"
+                "subnets": [
+                    {
+                        "name": "jumpserver-sub",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    },
+                    {
+                        "name": "sharedservices-sub",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24"
+                        }
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "10.0.2.0/24"
+                        }
+                    },
+                    {
+                        "name": "ngfw-int",
+                        "properties": {
+                            "addressPrefix": "10.0.3.0/26"
+                        }
+                    },
+                    {
+                        "name": "ngfw-ext",
+                        "properties": {
+                            "addressPrefix": "10.0.3.64/26"
+                        }
+                    },
+                    {
+                        "name": "rp",
+                        "properties": {
+                            "addressPrefix": "10.0.3.128/26"
+                        }
                     }
-                },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "GatewaySubnet",
-                    "properties": {
-                        "addressPrefix": "10.0.2.0/24"
-                    }
-                },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "ngfw-int",
-                    "properties": {
-                        "addressPrefix": "10.0.3.0/26"
-                    }
-                },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "ngfw-ext",
-                    "properties": {
-                        "addressPrefix": "10.0.3.64/26"
-                    }
-                },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "rp",
-                    "properties": {
-                        "addressPrefix": "10.0.3.128/26"
-                    }
-                }
-            ]
+                ]
+            }
         },
         {
             "apiVersion": "2015-06-15",
@@ -88,29 +76,25 @@
                     "addressPrefixes": [
                         "10.0.16.0/20"
                     ]
-                }
-            },
-            "resources": [
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "sub1",
-                    "properties": {
-                        "addressPrefix": "10.0.16.0/24",
-                        "networkSecurityGroup": {
-                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke1-sub1-fw'))]"
+                },
+                "subnets": [
+                    {
+                        "name": "sub1",
+                        "properties": {
+                            "addressPrefix": "10.0.16.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke1-sub1-fw'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "sub2",
+                        "properties": {
+                            "addressPrefix": "10.0.17.0/24"
                         }
                     }
-                },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "sub2",
-                    "properties": {
-                        "addressPrefix": "10.0.17.0/24"
-                    }
-                }
-            ]
+                ]
+            }
         },
         {
             "apiVersion": "2015-06-15",
@@ -126,29 +110,25 @@
                     "addressPrefixes": [
                         "10.0.32.0/20"
                     ]
-                }
-            },
-            "resources": [
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "sub1",
-                    "properties": {
-                        "addressPrefix": "10.0.32.0/24"
-                    }
                 },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "sub2",
-                    "properties": {
-                        "addressPrefix": "10.0.33.0/24",
-                        "networkSecurityGroup": {
-                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke2-sub1-fw'))]"
+                "subnets": [
+                    {
+                        "name": "sub1",
+                        "properties": {
+                            "addressPrefix": "10.0.32.0/24"
+                        }
+                    },
+                    {
+                        "name": "sub2",
+                        "properties": {
+                            "addressPrefix": "10.0.33.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke2-sub1-fw'))]"
+                            }
                         }
                     }
-                }
-            ]
+                ]
+            }
         },
         {
             "apiVersion": "2015-06-15",
@@ -161,26 +141,22 @@
                     "addressPrefixes": [
                         "10.254.0.0/16"
                     ]
-                }
-            },
-            "resources": [
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "server-sub",
-                    "properties": {
-                        "addressPrefix": "10.254.0.0/24"
-                    }
                 },
-                {
-                    "type": "subnets",
-                    "location": "[variables('location')]",
-                    "name": "GatewaySubnet",
-                    "properties": {
-                        "addressPrefix": "10.254.1.0/24"
+                "subnets": [
+                    {
+                        "name": "server-sub",
+                        "properties": {
+                            "addressPrefix": "10.254.0.0/24"
+                        }
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "10.254.1.0/24"
+                        }
                     }
-                }
-            ]
+                ]
+            }
         },
         {
             "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
