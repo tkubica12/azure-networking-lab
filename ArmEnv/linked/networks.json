@@ -505,8 +505,8 @@
             }
         },
         {
-            "name": "vpn-hub-to-central]",
             "type": "Microsoft.Network/connections",
+            "name": "vpn-hub-to-central",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "dependsOn": [
@@ -526,8 +526,8 @@
             }
         },
         {
-            "name": "vpn-central-to-hub]",
             "type": "Microsoft.Network/connections",
+            "name": "vpn-central-to-hub",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "dependsOn": [
