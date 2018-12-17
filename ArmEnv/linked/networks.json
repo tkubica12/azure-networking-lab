@@ -477,10 +477,12 @@
             "dependsOn": [
                 "[concat(parameters('namePrefix'), '-central-vpn')]"
             ],
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2018-08-01",
             "properties": {
                 "localNetworkAddressSpace": {
-                    "addressPrefixes": "10.254.0.0/16"
+                    "addressPrefixes": [
+                        "10.254.0.0/16"
+                    ]
                 },
                 "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-central-vpn-ip')).properties.ipAddress]"
             }
@@ -492,10 +494,12 @@
             "dependsOn": [
                 "[concat(parameters('namePrefix'), '-vpn')]"
             ],
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2018-08-01",
             "properties": {
                 "localNetworkAddressSpace": {
-                    "addressPrefixes": "10.0.0.0/20"
+                    "addressPrefixes": [
+                        "10.0.0.0/20"
+                    ]
                 },
                 "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-vpn-ip')).properties.ipAddress]"
             }
