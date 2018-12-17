@@ -194,6 +194,46 @@
             ]
         },
         {
+            "apiVersion": "2018-06-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[concat(parameters('namePrefix'), '-central-net')]",
+            "comments": "Deploy on-prem simulation network",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.254.0.0/16"
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "server-sub",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-central-net')]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.254.0.0/24"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "GatewaySubnet",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-central-net')]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.254.1.0/24"
+                    }
+                }
+            ]
+        },
+        {
             "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
             "comments": "Configure peering from Spoke1 to Hub",
             "dependsOn": [
@@ -219,7 +259,8 @@
             "dependsOn": [
                 "[concat(parameters('namePrefix'), '-hub-net')]",
                 "[concat(parameters('namePrefix'), '-spoke1-net')]",
-                "[concat(parameters('namePrefix'), '-spoke2-net')]"
+                "[concat(parameters('namePrefix'), '-spoke2-net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke1-net'), 'spoke1-to-hub')]"
             ],
             "name": "[concat(parameters('namePrefix'), '-spoke2-net', '/spoke2-to-hub')]",
             "apiVersion": "2018-08-01",
@@ -414,6 +455,26 @@
                         }
                     }
                 ]
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('namePrefix'), 'central-vpn-ip')]",
+            "comments": "Deploy Central VPN IP (onpremis)",
+            "location": "[variables('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('namePrefix'), 'vpn-ip')]",
+            "comments": "Deploy Hub VPN IP",
+            "location": "[variables('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
             }
         }
     ],

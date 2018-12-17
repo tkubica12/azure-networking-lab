@@ -14,6 +14,7 @@
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
+        "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
         "adminUsername": "tomas",
         "adminPassword": "Azure12345678"
     },
@@ -136,6 +137,39 @@
             }
         },
         {
+            "name": "deployOnpremServer",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy on-prem simulation server",
+            "dependsOn": [
+                "deployNetworking"
+            ],
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlVmSingle')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "subnetRef": {
+                        "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-central-net'), 'server-sub')]"
+                    },
+                    "privateIp": {
+                        "value": "10.254.0.4"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[variables('adminPassword')]"
+                    },
+                    "vmNamePrefix": {
+                        "value": "[concat(parameters('namePrefix'), '-central')]"
+                    }
+                }
+            }
+        },
+        {
             "name": "deployWebFarm",
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy load-balanced web farm",
@@ -146,7 +180,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('linkedUrlVmSingle')]",
+                    "uri": "[variables('linkedUrlWebFarm')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -177,6 +211,3 @@
     ],
     "outputs": {}
 }
-
-
-
