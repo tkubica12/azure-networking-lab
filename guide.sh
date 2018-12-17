@@ -454,7 +454,7 @@ az network vnet subnet create -g $podName-rg --vnet-name $podName-hub-net \
 ## Prepare NSG to allow traffic from Internet to reverse proxy
 az network nsg create -g $podName-rg -n $podName-hub-rp-fw
 
-az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
+az network nsg rule create -g $podName-rg --nsg-name $podName-hub-rp-fw \
     -n allowSSHFromJump --priority 100 \
     --source-address-prefixes 10.$podNumber.0.4/32 --source-port-ranges '*' \
     --destination-address-prefixes '*' --destination-port-ranges 22 --access Allow \
@@ -558,13 +558,13 @@ server {
 az group create -n $podName-new-rg -l westeurope
 ## New Hub VNET and subnets
 az group deployment create -g $podName-new-rg \
-    --template-file 01net.json --parameters @01net.parameters.json
+    --template-file ./ArmLabs/01net.json --parameters @./ArmLabs/01net.parameters.json
 ## Add spoke networks to template
 az group deployment create -g $podName-new-rg \
-    --template-file 02net.json --parameters @02net.parameters.json
+    --template-file ./ArmLabs/02net.json --parameters @./ArmLabs/02net.parameters.json
 ## Add VNET peerings to template
 az group deployment create -g $podName-new-rg \
-    --template-file 03net.json --parameters @03net.parameters.json
+    --template-file ./ArmLabs/03net.json --parameters @./ArmLabs/03net.parameters.json
 ## Add NSG
 az group deployment create -g $podName-new-rg \
-    --template-file 04net.json --parameters @04net.parameters.json
+    --template-file ./ArmLabs/04net.json --parameters @./ArmLabs/04net.parameters.json

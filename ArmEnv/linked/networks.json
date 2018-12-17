@@ -1,0 +1,421 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namePrefix": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-06-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[concat(parameters('namePrefix'), '-hub-net')]",
+            "comments": "Deploy hub network",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/20"
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "jumpserver-sub",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-hub-net')]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.0.0/24"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "sharedservices-sub",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-hub-net')]",
+                        "jumpserver-sub"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.1.0/24"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "GatewaySubnet",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-hub-net')]",
+                        "sharedservices-sub"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.2.0/24"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "ngfw-int",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-hub-net')]",
+                        "GatewaySubnet"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.3.0/26"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "ngfw-ext",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-hub-net')]",
+                        "ngfw-int"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.3.64/26"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "rp",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-hub-net')]",
+                        "ngfw-ext"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.3.128/26"
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2018-06-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[concat(parameters('namePrefix'), '-spoke1-net')]",
+            "comments": "Deploy spoke1 network",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.16.0/20"
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "sub1",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-spoke1-net')]",
+                        "[concat(parameters('namePrefix'), '-spoke1-sub1-fw')]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.16.0/24",
+                        "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke1-sub1-fw'))]"
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "sub2",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-spoke1-net')]",
+                        "sub1"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.17.0/24"
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2018-06-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[concat(parameters('namePrefix'), '-spoke2-net')]",
+            "comments": "Deploy spoke2 network",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.32.0/20"
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "sub1",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-spoke2-net')]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.32.0/24"
+                    }
+                },
+                {
+                    "apiVersion": "2018-06-01",
+                    "type": "subnets",
+                    "location": "[variables('location')]",
+                    "name": "sub2",
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-spoke2-net')]",
+                        "sub1",
+                        "[concat(parameters('namePrefix'), '-spoke2-sub1-fw')]"
+                    ],
+                    "properties": {
+                        "addressPrefix": "10.0.33.0/24",
+                        "networkSecurityGroup": {
+                            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke2-sub1-fw'))]"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "comments": "Configure peering from Spoke1 to Hub",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-hub-net')]",
+                "[concat(parameters('namePrefix'), '-spoke1-net')]",
+                "[concat(parameters('namePrefix'), '-spoke2-net')]"
+            ],
+            "name": "[concat(parameters('namePrefix'), '-spoke1-net', '/spoke1-to-hub')]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "comments": "Configure peering from Spoke2 to Hub",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-hub-net')]",
+                "[concat(parameters('namePrefix'), '-spoke1-net')]",
+                "[concat(parameters('namePrefix'), '-spoke2-net')]"
+            ],
+            "name": "[concat(parameters('namePrefix'), '-spoke2-net', '/spoke2-to-hub')]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "comments": "Configure peering from Hub to Spoke1",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-hub-net')]",
+                "[concat(parameters('namePrefix'), '-spoke1-net')]",
+                "[concat(parameters('namePrefix'), '-spoke2-net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke1-net'), 'spoke1-to-hub')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke2-net'), 'spoke2-to-hub')]"
+            ],
+            "name": "[concat(parameters('namePrefix'), '-hub-net', '/hub-to-spoke1')]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke1-net'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "comments": "Configure peering from Hub to Spoke2",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-hub-net')]",
+                "[concat(parameters('namePrefix'), '-spoke1-net')]",
+                "[concat(parameters('namePrefix'), '-spoke2-net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke1-net'), 'spoke1-to-hub')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke2-net'), 'spoke2-to-hub')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke1')]"
+            ],
+            "name": "[concat(parameters('namePrefix'), '-hub-net', '/hub-to-spoke2')]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat(parameters('namePrefix'), '-spoke2-sub1-fw')]",
+            "apiVersion": "2017-06-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allowSSHFromJump",
+                        "properties": {
+                            "description": "Allow SSH traffic from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "10.0.0.4/32",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "denySSH",
+                        "properties": {
+                            "description": "Deny SSH traffic",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 105,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "allowWeb",
+                        "properties": {
+                            "description": "Deny SSH traffic",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": [
+                                "80",
+                                "443"
+                            ],
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat(parameters('namePrefix'), '-spoke1-sub1-fw')]",
+            "apiVersion": "2017-06-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allowSSHFromJump",
+                        "properties": {
+                            "description": "Allow SSH traffic from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "10.0.0.4/32",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "denySSH",
+                        "properties": {
+                            "description": "Deny SSH traffic",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 105,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "allowWeb",
+                        "properties": {
+                            "description": "Deny SSH traffic",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": [
+                                "80",
+                                "443"
+                            ],
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "allowPaasSql",
+                        "properties": {
+                            "description": "Allow PaaS SQL traffic",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "1433",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "Sql.WestEurope",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Outbound"
+                        }
+                    },
+                    {
+                        "name": "denyInternet",
+                        "properties": {
+                            "description": "Allow PaaS SQL traffic",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 105,
+                            "direction": "Outbound"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
