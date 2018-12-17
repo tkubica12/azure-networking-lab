@@ -12,6 +12,7 @@
     "variables": {
         "linkedUrlBase": "https://github.com/tkubica12/azure-networking-lab/raw/master/ArmEnv/linked/",
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
+        "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
         "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
@@ -28,6 +29,24 @@
                 "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('linkedUrlVnets')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "namePrefix": {
+                        "value": "[parameters('namePrefix')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployVpns",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy VPNs",
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlVpns')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {

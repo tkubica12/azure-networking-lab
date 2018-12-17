@@ -158,7 +158,7 @@
                     "computerName": "[variables('vmName1')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]",
-                    "customData": "[variables('web1Script')]"
+                    "customData": "[variables('web2Script')]"
                 },
                 "storageProfile": {
                     "imageReference": {
