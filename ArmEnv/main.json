@@ -43,6 +43,9 @@
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy VPNs",
             "apiVersion": "2017-05-10",
+            "dependsOn": [
+                "deployNetworking"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {

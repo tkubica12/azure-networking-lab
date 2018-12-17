@@ -115,16 +115,16 @@
                     {
                         "name": "sub1",
                         "properties": {
-                            "addressPrefix": "10.0.32.0/24"
+                            "addressPrefix": "10.0.32.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke2-sub1-fw'))]"
+                            }
                         }
                     },
                     {
                         "name": "sub2",
                         "properties": {
-                            "addressPrefix": "10.0.33.0/24",
-                            "networkSecurityGroup": {
-                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke2-sub1-fw'))]"
-                            }
+                            "addressPrefix": "10.0.33.0/24"
                         }
                     }
                 ]
