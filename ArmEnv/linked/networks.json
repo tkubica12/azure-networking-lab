@@ -503,6 +503,48 @@
                 },
                 "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-vpn-ip')).ipAddress]"
             }
+        },
+        {
+            "name": "vpn-hub-to-central]",
+            "type": "Microsoft.Network/connections",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworkGateways/', concat(parameters('namePrefix'), '-vpn'))]",
+                "[concat('Microsoft.Network/localNetworkGateways/', 'central-gw')]"
+            ],
+            "properties": {
+                "virtualNetworkGateway1": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', concat(parameters('namePrefix'), '-vpn'))]"
+                },
+                "localNetworkGateway2": {
+                    "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'central-gw')]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 10,
+                "sharedKey": "Azure12345678"
+            }
+        },
+        {
+            "name": "vpn-central-to-hub]",
+            "type": "Microsoft.Network/connections",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworkGateways/', concat(parameters('namePrefix'), '-central-vpn'))]",
+                "[concat('Microsoft.Network/localNetworkGateways/', 'hub-gw')]"
+            ],
+            "properties": {
+                "virtualNetworkGateway1": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', concat(parameters('namePrefix'), '-central-vpn'))]"
+                },
+                "localNetworkGateway2": {
+                    "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'hub-gw')]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 10,
+                "sharedKey": "Azure12345678"
+            }
         }
     ],
     "outputs": {}
