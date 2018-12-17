@@ -469,6 +469,36 @@
                 "vpnType": "RouteBased",
                 "enableBgp": "false"
             }
+        },
+        {
+            "type": "Microsoft.Network/localNetworkGateways",
+            "name": "central-gw",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-central-vpn')]"
+            ],
+            "apiVersion": "2015-06-15",
+            "properties": {
+                "localNetworkAddressSpace": {
+                    "addressPrefixes": "10.254.0.0/16"
+                },
+                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-central-vpn-ip')).properties.ipAddress]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/localNetworkGateways",
+            "name": "central-gw",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-vpn')]"
+            ],
+            "apiVersion": "2015-06-15",
+            "properties": {
+                "localNetworkAddressSpace": {
+                    "addressPrefixes": "10.0.0.0/20"
+                },
+                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-vpn-ip')).properties.ipAddress]"
+            }
         }
     ],
     "outputs": {}

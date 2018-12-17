@@ -37,7 +37,9 @@
         "vmName2": "[concat(parameters('vmNamePrefix'), '2-vm')]",
         "lbName": "[concat(parameters('vmNamePrefix'), '-lb')]",
         "vmSize": "Standard_B1s",
-        "location": "[resourceGroup().location]"
+        "location": "[resourceGroup().location]",
+        "web1Script": "IyEvYmluL2Jhc2gNCnN1ZG8gYXB0IHVwZGF0ZSAmJiBzdWRvIGFwdCBpbnN0YWxsIGFwYWNoZTIgLXkNCmVjaG8gIlNlcnZlciAxIGlzIGFsaXZlISIgfCBzdWRvIHRlZSAvdmFyL3d3dy9odG1sL2luZGV4Lmh0bWw=",
+        "web2Script": "IyEvYmluL2Jhc2gNCnN1ZG8gYXB0IHVwZGF0ZSAmJiBzdWRvIGFwdCBpbnN0YWxsIGFwYWNoZTIgLXkNCmVjaG8gIlNlcnZlciAyIGlzIGFsaXZlISIgfCBzdWRvIHRlZSAvdmFyL3d3dy9odG1sL2luZGV4Lmh0bWw="
     },
     "resources": [
         {
@@ -114,7 +116,8 @@
                 "osProfile": {
                     "computerName": "[variables('vmName1')]",
                     "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[variables('web1Script')]"
                 },
                 "storageProfile": {
                     "imageReference": {
@@ -154,7 +157,8 @@
                 "osProfile": {
                     "computerName": "[variables('vmName1')]",
                     "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[variables('web1Script')]"
                 },
                 "storageProfile": {
                     "imageReference": {
