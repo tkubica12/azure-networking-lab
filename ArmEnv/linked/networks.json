@@ -11,7 +11,7 @@
     },
     "resources": [
         {
-            "apiVersion": "2018-06-01",
+            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-hub-net')]",
             "comments": "Deploy hub network",
@@ -25,7 +25,6 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "jumpserver-sub",
@@ -34,7 +33,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "sharedservices-sub",
@@ -43,7 +41,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "GatewaySubnet",
@@ -52,7 +49,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "ngfw-int",
@@ -61,7 +57,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "ngfw-ext",
@@ -70,7 +65,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "rp",
@@ -81,7 +75,7 @@
             ]
         },
         {
-            "apiVersion": "2018-06-01",
+            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-spoke1-net')]",
             "comments": "Deploy spoke1 network",
@@ -98,7 +92,6 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "sub1",
@@ -110,7 +103,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "sub2",
@@ -121,7 +113,7 @@
             ]
         },
         {
-            "apiVersion": "2018-06-01",
+            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-spoke2-net')]",
             "comments": "Deploy spoke2 network",
@@ -138,7 +130,6 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "sub1",
@@ -147,7 +138,6 @@
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "sub2",
@@ -161,7 +151,7 @@
             ]
         },
         {
-            "apiVersion": "2018-06-01",
+            "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-central-net')]",
             "comments": "Deploy on-prem simulation network",
@@ -175,25 +165,17 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "server-sub",
-                    "dependsOn": [
-                        "[concat(parameters('namePrefix'), '-central-net')]"
-                    ],
                     "properties": {
                         "addressPrefix": "10.254.0.0/24"
                     }
                 },
                 {
-                    "apiVersion": "2018-06-01",
                     "type": "subnets",
                     "location": "[variables('location')]",
                     "name": "GatewaySubnet",
-                    "dependsOn": [
-                        "[concat(parameters('namePrefix'), '-central-net')]"
-                    ],
                     "properties": {
                         "addressPrefix": "10.254.1.0/24"
                     }
