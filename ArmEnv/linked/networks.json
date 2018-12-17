@@ -484,7 +484,7 @@
                         "10.254.0.0/16"
                     ]
                 },
-                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-central-vpn-ip')).properties.ipAddress]"
+                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-central-vpn-ip')).ipAddress]"
             }
         },
         {
@@ -501,7 +501,7 @@
                         "10.0.0.0/20"
                     ]
                 },
-                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-vpn-ip')).properties.ipAddress]"
+                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-vpn-ip')).ipAddress]"
             }
         }
     ],
