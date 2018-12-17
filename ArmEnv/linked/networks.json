@@ -460,7 +460,7 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[concat(parameters('namePrefix'), 'central-vpn-ip')]",
+            "name": "[concat(parameters('namePrefix'), '-central-vpn-ip')]",
             "comments": "Deploy Central VPN IP (onpremis)",
             "location": "[variables('location')]",
             "properties": {
@@ -470,11 +470,79 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[concat(parameters('namePrefix'), 'vpn-ip')]",
+            "name": "[concat(parameters('namePrefix'), '-vpn-ip')]",
             "comments": "Deploy Hub VPN IP",
             "location": "[variables('location')]",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "apiVersion": "2018-08-01",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "name": "[concat(parameters('namePrefix'), '-central-vpn')]",
+            "comments": "Deploy central (onprem) VPN",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-central-vpn-ip')]",
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('namePrefix'), '-central-net')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-central-net'), 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('namePrefix'), '-central-vpn-ip'))]"
+                            }
+                        },
+                        "name": "vnetGatewayConfig"
+                    }
+                ],
+                "sku": {
+                    "name": "Basic",
+                    "tier": "Basic"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": "false"
+            }
+        },
+        {
+            "apiVersion": "2018-08-01",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "name": "[concat(parameters('namePrefix'), '-vpn')]",
+            "comments": "Deploy hub VPN",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-vpn-ip')]",
+                "[concat('Microsoft.Network/virtualNetworks/', parameters('namePrefix'), '-hub-net')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('namePrefix'), '-vpn-ip'))]"
+                            }
+                        },
+                        "name": "vnetGatewayConfig"
+                    }
+                ],
+                "sku": {
+                    "name": "Basic",
+                    "tier": "Basic"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": "false"
             }
         }
     ],
