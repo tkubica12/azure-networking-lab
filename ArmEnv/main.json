@@ -43,7 +43,7 @@
         {
             "name": "deploySql",
             "type": "Microsoft.Resources/deployments",
-            "comments": "Deploy networks, NSGs, peerings",
+            "comments": "Deploy PaaS SQL",
             "apiVersion": "2017-05-10",
             "properties": {
                 "mode": "Incremental",
@@ -61,7 +61,7 @@
                     "adminPassword": {
                         "value": "[variables('adminPassword')]"
                     },
-                    "subnetRefInt": {
+                    "subnetRef": {
                         "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-spoke1-net'), 'sub1')]"
                     }
                 }
