@@ -68,7 +68,8 @@
             "name": "[concat(parameters('namePrefix'), '-spoke1-net')]",
             "comments": "Deploy spoke1 network",
             "dependsOn": [
-                "[concat(parameters('namePrefix'), '-spoke1-sub1-fw')]"
+                "[concat(parameters('namePrefix'), '-spoke1-sub1-fw')]",
+                "[concat(parameters('namePrefix'), '-defaultRoutes')]"
             ],
             "location": "[variables('location')]",
             "properties": {
@@ -84,6 +85,9 @@
                             "addressPrefix": "10.0.16.0/24",
                             "networkSecurityGroup": {
                                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke1-sub1-fw'))]"
+                            },
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('namePrefix'), '-defaultRoutes'))]"
                             }
                         }
                     },
@@ -102,7 +106,8 @@
             "name": "[concat(parameters('namePrefix'), '-spoke2-net')]",
             "comments": "Deploy spoke2 network",
             "dependsOn": [
-                "[concat(parameters('namePrefix'), '-spoke2-sub1-fw')]"
+                "[concat(parameters('namePrefix'), '-spoke2-sub1-fw')]",
+                "[concat(parameters('namePrefix'), '-defaultRoutes')]"
             ],
             "location": "[variables('location')]",
             "properties": {
@@ -118,6 +123,9 @@
                             "addressPrefix": "10.0.32.0/24",
                             "networkSecurityGroup": {
                                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-spoke2-sub1-fw'))]"
+                            },
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('namePrefix'), '-defaultRoutes'))]"
                             }
                         }
                     },
@@ -363,6 +371,24 @@
                             "access": "Allow",
                             "priority": 100,
                             "direction": "Outbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[concat(parameters('namePrefix'), '-defaultRoutes')]",
+            "apiVersion": "2018-07-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "routes": [
+                    {
+                        "name": "defaultToNva",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "10.0.3.4"
                         }
                     }
                 ]

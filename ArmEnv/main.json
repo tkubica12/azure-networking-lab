@@ -13,6 +13,7 @@
         "linkedUrlBase": "https://github.com/tkubica12/azure-networking-lab/raw/master/ArmEnv/linked/",
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
+        "linkedUrlRouter": "[concat(variables('linkedUrlBase'), 'router.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
         "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
@@ -55,6 +56,42 @@
                 "parameters": {
                     "namePrefix": {
                         "value": "[parameters('namePrefix')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployRouterNva",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy router NVA",
+            "dependsOn": [
+                "deployNetworking"
+            ],
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlRouter')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "subnetRefInt": {
+                        "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'ngfw-int')]"
+                    },
+                    "subnetRefExt": {
+                        "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'ngfw-ext')]"
+                    },
+                    "privateIp": {
+                        "value": "10.0.3.4"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[variables('adminPassword')]"
+                    },
+                    "vmNamePrefix": {
+                        "value": "[concat(parameters('namePrefix'), '-ngfw')]"
                     }
                 }
             }
@@ -196,7 +233,8 @@
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy load-balanced web farm",
             "dependsOn": [
-                "deployNetworking"
+                "deployNetworking",
+                "deployRouterNva"
             ],
             "apiVersion": "2017-05-10",
             "properties": {
