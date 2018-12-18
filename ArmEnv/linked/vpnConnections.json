@@ -21,7 +21,7 @@
                         "10.254.0.0/16"
                     ]
                 },
-                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-central-vpn-ip'), '2015-06-15').ipAddress]"
+                "gatewayIpAddress": "[reference(concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-central-vpn-ip'), '2015-06-15').ipAddress]"
             }
         },
         {
@@ -35,7 +35,7 @@
                         "10.0.0.0/20"
                     ]
                 },
-                "gatewayIpAddress": "[reference(concat(parameters('namePrefix'), '-vpn-ip'), '2015-06-15').ipAddress]"
+                "gatewayIpAddress": "[reference(concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-vpn-ip'), '2015-06-15').ipAddress]"
             }
         },
         {
