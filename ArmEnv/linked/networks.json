@@ -15,6 +15,9 @@
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-hub-net')]",
             "comments": "Deploy hub network",
+            "dependsOn": [
+                "[concat(parameters('namePrefix'), '-hub-rp-fw')]"
+            ],
             "location": "[variables('location')]",
             "properties": {
                 "addressSpace": {
@@ -56,7 +59,10 @@
                     {
                         "name": "rp",
                         "properties": {
-                            "addressPrefix": "10.0.3.128/26"
+                            "addressPrefix": "10.0.3.128/26",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-hub-rp-fw'))]"
+                            }
                         }
                     }
                 ]
@@ -91,12 +97,12 @@
                             },
                             "serviceEndpoints": [
                                 {
-                                  "service": "Microsoft.Sql",
-                                  "locations": [
-                                    "westeurope"
-                                  ]
+                                    "service": "Microsoft.Sql",
+                                    "locations": [
+                                        "westeurope"
+                                    ]
                                 }
-                              ]
+                            ]
                         }
                     },
                     {
@@ -298,7 +304,7 @@
                     {
                         "name": "allowWeb",
                         "properties": {
-                            "description": "Deny SSH traffic",
+                            "description": "Allow web traffic",
                             "protocol": "Tcp",
                             "sourcePortRange": "*",
                             "destinationPortRanges": [
@@ -353,7 +359,7 @@
                     {
                         "name": "allowWeb",
                         "properties": {
-                            "description": "Deny SSH traffic",
+                            "description": "Allow web traffic",
                             "protocol": "Tcp",
                             "sourcePortRange": "*",
                             "destinationPortRanges": [
@@ -379,6 +385,60 @@
                             "access": "Allow",
                             "priority": 100,
                             "direction": "Outbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat(parameters('namePrefix'), '-hub-rp-fw')]",
+            "apiVersion": "2017-06-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "allowSSHFromJump",
+                        "properties": {
+                            "description": "Allow SSH traffic from jump server",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "10.0.0.4/32",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "denySSH",
+                        "properties": {
+                            "description": "Deny SSH traffic",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Deny",
+                            "priority": 105,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "allowWeb",
+                        "properties": {
+                            "description": "Allow web ports on reverse proxy",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": [
+                                "8080-8090"
+                            ],
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
                         }
                     }
                 ]
