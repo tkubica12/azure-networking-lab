@@ -13,6 +13,7 @@
         "linkedUrlBase": "https://github.com/tkubica12/azure-networking-lab/raw/master/ArmEnv/linked/",
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
+        "linkedUrlVpnConnections": "[concat(variables('linkedUrlBase'), 'vpnConnections.json')]",
         "linkedUrlRouter": "[concat(variables('linkedUrlBase'), 'router.json')]",
         "linkedUrlSql": "[concat(variables('linkedUrlBase'), 'sql.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
@@ -79,6 +80,28 @@
                 "mode": "Incremental",
                 "templateLink": {
                     "uri": "[variables('linkedUrlVpns')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "namePrefix": {
+                        "value": "[parameters('namePrefix')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployVpnConnections",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy VPN Connections",
+            "apiVersion": "2017-05-10",
+            "dependsOn": [
+                "deployVpns",
+                "deployOnpremServer"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlVpnConnections')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -228,7 +251,8 @@
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy on-prem simulation server",
             "dependsOn": [
-                "deployNetworking"
+                "deployNetworking",
+                "deployVpns"
             ],
             "apiVersion": "2017-05-10",
             "properties": {
