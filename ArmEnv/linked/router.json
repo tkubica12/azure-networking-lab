@@ -127,10 +127,16 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName1'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName1'))]",
+                            "properties": {
+                                "primary": true
+                            }
                         },
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName2'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName2'))]",
+                            "properties": {
+                                "primary": false
+                            }
                         }
                     ]
                 }
