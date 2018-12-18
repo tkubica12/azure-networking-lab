@@ -11,7 +11,7 @@
     },
     "resources": [
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-12-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-hub-net')]",
             "comments": "Deploy hub network",
@@ -63,7 +63,7 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-12-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-spoke1-net')]",
             "comments": "Deploy spoke1 network",
@@ -109,7 +109,7 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
+            "apiVersion": "2016-12-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-spoke2-net')]",
             "comments": "Deploy spoke2 network",
