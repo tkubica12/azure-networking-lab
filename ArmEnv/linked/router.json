@@ -51,9 +51,6 @@
             "name": "[variables('nicName1')]",
             "apiVersion": "2018-10-01",
             "location": "[variables('location')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses/', variables('ipName'))]"
-            ],
             "properties": {
                 "ipConfigurations": [
                     {
@@ -74,6 +71,9 @@
             "apiVersion": "2018-10-01",
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('nicName2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses/', variables('ipName'))]"
+            ],
             "location": "[variables('location')]",
             "properties": {
                 "ipConfigurations": [
@@ -82,7 +82,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('ipName'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('ipName'))]"
                             },
                             "subnet": {
                                 "id": "[parameters('subnetRefExt')]"
@@ -126,7 +126,10 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName1'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName1'))]"
+                        },
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName2'))]"
                         }
                     ]
                 }
