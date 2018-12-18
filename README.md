@@ -1,6 +1,6 @@
 # Introduction to Azure Networking - lab
 
-This lab will guide you throw creation of enterprise networking environment in Azure including:
+This lab (guide.sh) will guide you throw creation of enterprise networking environment in Azure including:
 * VNETs and subnets
 * Hub-and-spoke topology with VNET peering
 * Load balancing
@@ -17,7 +17,7 @@ This lab will guide you throw creation of enterprise networking environment in A
 Folow instructions in guide.sh and use your name and pod number assigned by instructor.
 Instructor will use centra.sh to deploy simulation of on-premises environment.
 
-# ARM template to quickly build complete demo (work in progress)
+# ARM template to quickly build complete demo
 This demo using CLI (or GUI) to enforce learning and troubleshooting on the way.
 
 Nevertheless if you need just quickly create complete environment for demonstration or testing purposes, use ARM templates in ArmEnv folder or click Deploy to Azure button here:
