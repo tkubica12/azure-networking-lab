@@ -98,12 +98,12 @@
             "apiVersion": "2017-05-10",
             "dependsOn": [
                 "deployVpns",
-                "deployNetworking"
+                "deployOnpremServer"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('linkedUrlAllowRemoteGateway')]",
+                    "uri": "[variables('linkedUrlVpnConnections')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -119,13 +119,12 @@
             "comments": "Allow spoke networks to share VPN gateway in hub to talk to onprem",
             "apiVersion": "2017-05-10",
             "dependsOn": [
-                "deployVpns",
-                "deployOnpremServer"
+                "deployVpns"
             ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('linkedUrlVpnConnections')]",
+                    "uri": "[variables('linkedUrlAllowRemoteGateway')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
