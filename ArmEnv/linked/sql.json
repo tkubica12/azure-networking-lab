@@ -23,7 +23,7 @@
     },
     "variables": {
         "dbName": "[concat(parameters('dbNamePrefix'), '-db-', uniqueString(resourceGroup().id))]",
-        "dbSrvName": "[concat(parameters('dbNamePrefix'), '-dbSrv-', uniqueString(resourceGroup().id))]",
+        "dbSrvName": "[concat(parameters('dbNamePrefix'), '-dbsrv-', uniqueString(resourceGroup().id))]",
         "location": "[resourceGroup().location]"
     },
     "resources": [
