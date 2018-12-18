@@ -14,6 +14,7 @@
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
         "linkedUrlVpnConnections": "[concat(variables('linkedUrlBase'), 'vpnConnections.json')]",
+        "linkedUrlAllowRemoteGateway": "[concat(variables('linkedUrlBase'), 'allowRemoteGateway.json')]",
         "linkedUrlRouter": "[concat(variables('linkedUrlBase'), 'router.json')]",
         "linkedUrlSql": "[concat(variables('linkedUrlBase'), 'sql.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
@@ -94,6 +95,28 @@
             "name": "deployVpnConnections",
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy VPN Connections",
+            "apiVersion": "2017-05-10",
+            "dependsOn": [
+                "deployVpns",
+                "deployNetworking"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlAllowRemoteGateway')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "namePrefix": {
+                        "value": "[parameters('namePrefix')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployAllowRemoteGateway",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Allow spoke networks to share VPN gateway in hub to talk to onprem",
             "apiVersion": "2017-05-10",
             "dependsOn": [
                 "deployVpns",

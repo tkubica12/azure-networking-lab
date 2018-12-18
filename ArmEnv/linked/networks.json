@@ -16,7 +16,8 @@
             "name": "[concat(parameters('namePrefix'), '-hub-net')]",
             "comments": "Deploy hub network",
             "dependsOn": [
-                "[concat(parameters('namePrefix'), '-hub-rp-fw')]"
+                "[concat(parameters('namePrefix'), '-hub-rp-fw')]",
+                "[concat(parameters('namePrefix'), '-defaultRoutes')]"
             ],
             "location": "[variables('location')]",
             "properties": {
@@ -41,7 +42,10 @@
                     {
                         "name": "GatewaySubnet",
                         "properties": {
-                            "addressPrefix": "10.0.2.0/24"
+                            "addressPrefix": "10.0.2.0/24",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('namePrefix'), '-defaultRoutes'))]"
+                            }
                         }
                     },
                     {
