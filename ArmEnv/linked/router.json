@@ -64,7 +64,8 @@
                         }
                     }
                 ],
-                "enableIPForwarding": true
+                "enableIPForwarding": true,
+                "primary": true
             }
         },
         {
