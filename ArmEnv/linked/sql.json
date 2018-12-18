@@ -1,0 +1,71 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "User name for the Virtual Machine."
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the Virtual Machine."
+            }
+        },
+        "dbNamePrefix": {
+            "type": "string"
+        },
+        "subnetRef": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "dbName": "[concat(parameters('dbNamePrefix'), '-db-', uniqueString(resourceGroup().id))]",
+        "dbSrvName": "[concat(parameters('dbNamePrefix'), '-dbSrv-', uniqueString(resourceGroup().id))]",
+        "location": "[resourceGroup().location]"
+    },
+    "resources": [
+        {
+            "name": "[variables('dbSrvName')]",
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2014-04-01-preview",
+            "location": "[variables('location')]",
+            "properties": {
+                "administratorLogin": "[parameters('adminUsername')]",
+                "administratorLoginPassword": "[parameters('adminPassword')]",
+                "version": "12.0"
+            },
+            "resources": [
+                {
+                    "name": "[variables('dbName')]",
+                    "type": "databases",
+                    "apiVersion": "2015-01-01",
+                    "location": "[variables('location')]",
+                    "properties": {
+                        "edition": "Basic",
+                        "collation": "SQL_Latin1_General_CP1_CI_AS",
+                        "requestedServiceObjectiveName": "Basic"
+                    },
+                    "dependsOn": [
+                        "[variables('dbSrvName')]"
+                    ]
+                },
+                {
+                    "name": "linkForSQL",
+                    "type": "virtualNetworkRules",
+                    "apiVersion": "2015-05-01-preview",
+                    "properties": {
+                        "virtualNetworkSubnetId": "[parameters('subnetRef')]",
+                        "ignoreMissingVnetServiceEndpoint": true
+                    },
+                    "dependsOn": [
+                        "[variables('dbSrvName')]"
+                    ]
+                }
+            ]
+        }
+    ],
+    "outputs": {}
+}

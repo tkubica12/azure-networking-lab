@@ -14,6 +14,7 @@
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
         "linkedUrlRouter": "[concat(variables('linkedUrlBase'), 'router.json')]",
+        "linkedUrlSql": "[concat(variables('linkedUrlBase'), 'sql.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
         "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
@@ -35,6 +36,33 @@
                 "parameters": {
                     "namePrefix": {
                         "value": "[parameters('namePrefix')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deploySql",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy networks, NSGs, peerings",
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlSql')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "dbNamePrefix": {
+                        "value": "[parameters('namePrefix')]"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[variables('adminPassword')]"
+                    },
+                    "subnetRefInt": {
+                        "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-spoke1-net'), 'sub1')]"
                     }
                 }
             }
