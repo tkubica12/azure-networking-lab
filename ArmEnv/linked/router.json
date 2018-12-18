@@ -61,7 +61,6 @@
                         "properties": {
                             "privateIPAllocationMethod": "Static",
                             "privateIPAddress": "[parameters('privateIp')]",
-
                             "subnet": {
                                 "id": "[parameters('subnetRefInt')]"
                             }
@@ -100,7 +99,8 @@
             "name": "[variables('vmName')]",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName1'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName2'))]"
             ],
             "properties": {
                 "hardwareProfile": {
