@@ -199,7 +199,7 @@
                         "name": "loadBalancerFrontEnd",
                         "properties": {
                             "publicIPAddress": {
-                                "id": "[variables('lbIpName')]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('lbIpName'))]"
                             }
                         }
                     }
