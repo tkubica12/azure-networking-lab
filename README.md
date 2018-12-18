@@ -20,4 +20,8 @@ Instructor will use centra.sh to deploy simulation of on-premises environment.
 # ARM template to quickly build complete demo (work in progress)
 This demo using CLI (or GUI) to enforce learning and troubleshooting on the way.
 
-Nevertheless if you need just quickly create complete environment for demonstration or testing purposes, use ARM templates in ArmEnv folder.
+Nevertheless if you need just quickly create complete environment for demonstration or testing purposes, use ARM templates in ArmEnv folder or click Deploy to Azure button here:
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Ftkubica12%2Fazure-networking-lab%2Fraw%2Fmaster%2FArmEnv%2Fmain.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
