@@ -19,6 +19,7 @@
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
         "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
+        "linkedUrlReverseProxies": "[concat(variables('linkedUrlBase'), 'reverseProxies.json')]",
         "adminUsername": "tomas",
         "adminPassword": "Azure12345678"
     },
@@ -316,6 +317,36 @@
                     },
                     "vmNamePrefix": {
                         "value": "[concat(parameters('namePrefix'), '-web')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployReverseProxies",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy reverse proxies behind LB",
+            "dependsOn": [
+                "deployNetworking"
+            ],
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlReverseProxies')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "subnetRef": {
+                        "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'rp')]"
+                    },
+                    "adminUsername": {
+                        "value": "[variables('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[variables('adminPassword')]"
+                    },
+                    "vmNamePrefix": {
+                        "value": "[concat(parameters('namePrefix'), '-rp')]"
                     }
                 }
             }
