@@ -28,7 +28,9 @@
         "nicName": "[concat(parameters('vmNamePrefix'), '-nic')]",
         "vmName": "[concat(parameters('vmNamePrefix'), '-vm')]",
         "vmSize": "Standard_B1s",
-        "location": "[resourceGroup().location]"
+        "location": "[resourceGroup().location]",
+        "script": "IyEvYmluL2Jhc2gNCmN1cmwgaHR0cHM6Ly9wYWNrYWdlcy5taWNyb3NvZnQuY29tL2tleXMvbWljcm9zb2Z0LmFzYyB8IHN1ZG8gYXB0LWtleSBhZGQgLQ0KY3VybCBodHRwczovL3BhY2thZ2VzLm1pY3Jvc29mdC5jb20vY29uZmlnL3VidW50dS8xNi4wNC9wcm9kLmxpc3QgfCBzdWRvIHRlZSAvZXRjL2FwdC9zb3VyY2VzLmxpc3QuZC9tc3Byb2QubGlzdA0Kc3VkbyBhcHQtZ2V0IHVwZGF0ZSANCnN1ZG8gQUNDRVBUX0VVTEE9WSBhcHQtZ2V0IGluc3RhbGwgbXNzcWwtdG9vbHMgdW5peG9kYmMtZGV2IC15DQplY2hvICdleHBvcnQgUEFUSD0iJFBBVEg6L29wdC9tc3NxbC10b29scy9iaW4iJyA+PiB+Ly5iYXNocmMNCg=="
+
     },
     "resources": [
         {
@@ -66,7 +68,8 @@
                 "osProfile": {
                     "computerName": "[variables('vmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[variables('script')]"
                 },
                 "storageProfile": {
                     "imageReference": {
