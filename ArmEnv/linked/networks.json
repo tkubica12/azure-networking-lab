@@ -4,6 +4,9 @@
     "parameters": {
         "namePrefix": {
             "type": "string"
+        },
+        "fwIp": {
+            "type": "string"
         }
     },
     "variables": {
@@ -67,6 +70,12 @@
                             "networkSecurityGroup": {
                                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-hub-rp-fw'))]"
                             }
+                        }
+                    },
+                    {
+                        "name": "AzureFirewallSubnet",
+                        "properties": {
+                            "addressPrefix": "10.0.3.192/26"
                         }
                     }
                 ]
@@ -460,7 +469,7 @@
                         "properties": {
                             "addressPrefix": "0.0.0.0/0",
                             "nextHopType": "VirtualAppliance",
-                            "nextHopIpAddress": "10.0.3.4"
+                            "nextHopIpAddress": "[parameters('fwIp')]"
                         }
                     }
                 ]

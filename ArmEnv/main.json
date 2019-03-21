@@ -7,6 +7,35 @@
             "metadata": {
                 "description": "Your resources prefix, eg. your short name"
             }
+        },
+        "firewallType": {
+            "type": "string",
+            "metadata": {
+                "description": "Select firewall implementation - AzureFirewall or Appliance"
+            },
+            "allowedValues": [
+                "AzureFirewall",
+                "Appliance"
+            ],
+            "defaultValue": "AzureFirewall"
+        },
+        "wafType": {
+            "type": "string",
+            "metadata": {
+                "description": "Select reverse proxy / WAF implementation - AzureAppGw or Appliance"
+            },
+            "allowedValues": [
+                "AzureAppGw",
+                "Appliance"
+            ],
+            "defaultValue": "AzureAppGw"
+        },
+        "deployVpn": {
+            "type": "bool",
+            "metadata": {
+                "description": "By default VPNs are deployed, which takes about 40 minutes. You can skip it if VPN is not needed."
+            },
+            "defaultValue": true
         }
     },
     "variables": {
@@ -16,13 +45,16 @@
         "linkedUrlVpnConnections": "[concat(variables('linkedUrlBase'), 'vpnConnections.json')]",
         "linkedUrlAllowRemoteGateway": "[concat(variables('linkedUrlBase'), 'allowRemoteGateway.json')]",
         "linkedUrlRouter": "[concat(variables('linkedUrlBase'), 'router.json')]",
+        "linkedUrlAzureFirewall": "[concat(variables('linkedUrlBase'), 'azureFirewall.json')]",
         "linkedUrlSql": "[concat(variables('linkedUrlBase'), 'sql.json')]",
         "linkedUrlVmSingleWithPublicIp": "[concat(variables('linkedUrlBase'), 'vmSingleWithPublicIp.json')]",
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
         "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
         "linkedUrlReverseProxies": "[concat(variables('linkedUrlBase'), 'reverseProxies.json')]",
         "adminUsername": "tomas",
-        "adminPassword": "Azure12345678"
+        "adminPassword": "Azure12345678",
+        "fwIpAppliance": "10.0.3.4",
+        "fwIpAzureFirewall": "10.0.3.196"
     },
     "resources": [
         {
@@ -39,6 +71,9 @@
                 "parameters": {
                     "namePrefix": {
                         "value": "[parameters('namePrefix')]"
+                    },
+                    "fwIp": {
+                        "value": "[variables(concat('fwIp', parameters('firewallType')))]"
                     }
                 }
             }
@@ -73,6 +108,7 @@
         {
             "name": "deployVpns",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[parameters('deployVpn')]",
             "comments": "Deploy VPNs",
             "apiVersion": "2017-05-10",
             "dependsOn": [
@@ -94,6 +130,7 @@
         {
             "name": "deployVpnConnections",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[parameters('deployVpn')]",
             "comments": "Deploy VPN Connections",
             "apiVersion": "2017-05-10",
             "dependsOn": [
@@ -137,6 +174,7 @@
         {
             "name": "deployRouterNva",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[equals(parameters('firewallType'), 'Appliance')]",
             "comments": "Deploy router NVA",
             "dependsOn": [
                 "deployNetworking"
@@ -156,7 +194,7 @@
                         "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'ngfw-ext')]"
                     },
                     "privateIp": {
-                        "value": "10.0.3.4"
+                        "value": "[variables('fwIpAppliance')]"
                     },
                     "adminUsername": {
                         "value": "[variables('adminUsername')]"
@@ -166,6 +204,31 @@
                     },
                     "vmNamePrefix": {
                         "value": "[concat(parameters('namePrefix'), '-ngfw')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployAzureFirewall",
+            "type": "Microsoft.Resources/deployments",
+            "condition": "[equals(parameters('firewallType'), 'AzureFirewall')]",
+            "comments": "Deploy router NVA",
+            "dependsOn": [
+                "deployNetworking"
+            ],
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlAzureFirewall')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "azureFirewallSubnetId": {
+                        "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'AzureFirewallSubnet')]"
+                    },
+                    "privateIp": {
+                        "value": "[variables('fwIpAppliance')]"
                     }
                 }
             }
@@ -346,6 +409,7 @@
         {
             "name": "deployReverseProxies",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[equals(parameters('wafType'), 'Appliance')]",
             "comments": "Deploy reverse proxies behind LB",
             "dependsOn": [
                 "deployNetworking"
