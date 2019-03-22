@@ -453,6 +453,22 @@
                             "priority": 110,
                             "direction": "Inbound"
                         }
+                    },
+                    {
+                        "name": "allowAppGwManagement",
+                        "properties": {
+                            "description": "Allow web ports on reverse proxy",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRanges": [
+                                "65200-65535"
+                            ],
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 120,
+                            "direction": "Inbound"
+                        }
                     }
                 ]
             }
