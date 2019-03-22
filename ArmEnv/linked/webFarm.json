@@ -38,8 +38,8 @@
         "lbName": "[concat(parameters('vmNamePrefix'), '-lb')]",
         "vmSize": "Standard_B1s",
         "location": "[resourceGroup().location]",
-        "web1Script": "IyEvYmluL2Jhc2gNCnN1ZG8gYXB0IHVwZGF0ZSAmJiBzdWRvIGFwdCBpbnN0YWxsIGFwYWNoZTIgLXkNCmVjaG8gIlNlcnZlciAxIGlzIGFsaXZlISIgfCBzdWRvIHRlZSAvdmFyL3d3dy9odG1sL2luZGV4Lmh0bWw=",
-        "web2Script": "IyEvYmluL2Jhc2gNCnN1ZG8gYXB0IHVwZGF0ZSAmJiBzdWRvIGFwdCBpbnN0YWxsIGFwYWNoZTIgLXkNCmVjaG8gIlNlcnZlciAyIGlzIGFsaXZlISIgfCBzdWRvIHRlZSAvdmFyL3d3dy9odG1sL2luZGV4Lmh0bWw="
+        "web1Script": "I2Nsb3VkLWNvbmZpZwpydW5jbWQ6CiAgICAtIHN1ZG8gYXB0IHVwZGF0ZSAKICAgIC0gc3VkbyBhcHQgaW5zdGFsbCBhcGFjaGUyIC15CiAgICAtIGVjaG8gIldFQjogU2VydmVyIDEgaXMgYWxpdmUhIiB8IHN1ZG8gdGVlIC92YXIvd3d3L2h0bWwvaW5kZXguaHRtbA==",
+        "web2Script": "I2Nsb3VkLWNvbmZpZwpydW5jbWQ6CiAgICAtIHN1ZG8gYXB0IHVwZGF0ZSAKICAgIC0gc3VkbyBhcHQgaW5zdGFsbCBhcGFjaGUyIC15CiAgICAtIGVjaG8gIldFQjogU2VydmVyIDIgaXMgYWxpdmUhIiB8IHN1ZG8gdGVlIC92YXIvd3d3L2h0bWwvaW5kZXguaHRtbA=="
     },
     "resources": [
         {

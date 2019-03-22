@@ -455,7 +455,7 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "subnetRef": {
+                    "rpSubnetId": {
                         "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'rp')]"
                     }
                 }
