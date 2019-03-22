@@ -61,7 +61,14 @@
                     {
                         "name": "appGatewayBackendPool",
                         "properties": {
-                            "BackendAddresses": []
+                            "BackendAddresses": [
+                                {
+                                    "ipAddress": "10.0.32.4"
+                                },
+                                {
+                                    "ipAddress": "10.0.32.5"
+                                }
+                            ]
                         }
                     }
                 ],
