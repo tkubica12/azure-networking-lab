@@ -55,7 +55,7 @@
                     {
                         "name": "allowMicrosoft",
                         "properties": {
-                            "priority": 101,
+                            "priority": 100,
                             "action": {
                                 "type": "Allow"
                             },
@@ -74,6 +74,33 @@
                                     ],
                                     "targetUrls": [
                                         "*microsoft.com"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "allowUbuntu",
+                        "properties": {
+                            "priority": 110,
+                            "action": {
+                                "type": "Allow"
+                            },
+                            "rules": [
+                                {
+                                    "name": "ubuntu",
+                                    "protocols": [
+                                        {
+                                            "port": "80",
+                                            "protocolType": "http"
+                                        },
+                                        {
+                                            "port": "443",
+                                            "protocolType": "https"
+                                        }
+                                    ],
+                                    "targetUrls": [
+                                        "*ubuntu.com"
                                     ]
                                 }
                             ]
