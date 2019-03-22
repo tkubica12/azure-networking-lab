@@ -53,7 +53,7 @@
                 ],
                 "applicationRuleCollections": [
                     {
-                        "name": "appRc1",
+                        "name": "allowMicrosoft",
                         "properties": {
                             "priority": 101,
                             "action": {
@@ -61,7 +61,7 @@
                             },
                             "rules": [
                                 {
-                                    "name": "appRule1",
+                                    "name": "microsoft",
                                     "protocols": [
                                         {
                                             "port": "80",
@@ -82,7 +82,7 @@
                 ],
                 "networkRuleCollections": [
                     {
-                        "name": "netRc1",
+                        "name": "allowInternalCommunication",
                         "properties": {
                             "priority": 200,
                             "action": {
@@ -90,18 +90,33 @@
                             },
                             "rules": [
                                 {
-                                    "name": "netRule1",
+                                    "name": "allowWeb",
                                     "protocols": [
                                         "TCP"
                                     ],
                                     "sourceAddresses": [
-                                        "192.168.2.0/24"
+                                        "10.0.0.0/8"
                                     ],
                                     "destinationAddresses": [
-                                        "*"
+                                        "10.0.0.0/8"
                                     ],
                                     "destinationPorts": [
-                                        "8000-8999"
+                                        "80,443"
+                                    ]
+                                },
+                                {
+                                    "name": "allowSsh",
+                                    "protocols": [
+                                        "TCP"
+                                    ],
+                                    "sourceAddresses": [
+                                        "10.0.0.0/8"
+                                    ],
+                                    "destinationAddresses": [
+                                        "10.0.0.0/8"
+                                    ],
+                                    "destinationPorts": [
+                                        "22"
                                     ]
                                 }
                             ]

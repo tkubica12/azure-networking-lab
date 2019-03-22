@@ -153,6 +153,7 @@
         {
             "name": "deployAllowRemoteGateway",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[parameters('deployVpn')]",
             "comments": "Allow spoke networks to share VPN gateway in hub to talk to onprem",
             "apiVersion": "2017-05-10",
             "dependsOn": [
@@ -335,6 +336,7 @@
         {
             "name": "deployOnpremServer",
             "type": "Microsoft.Resources/deployments",
+            "condition": "[parameters('deployVpn')]",
             "comments": "Deploy on-prem simulation server",
             "dependsOn": [
                 "deployNetworking",
