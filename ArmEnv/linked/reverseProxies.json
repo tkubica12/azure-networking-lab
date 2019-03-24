@@ -31,7 +31,7 @@
         "lbDnsName": "[concat(subscription().subscriptionId, '-', resourceGroup().name)]",
         "vmSize": "Standard_B1s",
         "location": "[resourceGroup().location]",
-        "script": "IyEvYmluL2Jhc2gNCnN1ZG8gYXB0LWdldCB1cGRhdGUgDQpzdWRvIGFwdC1nZXQgaW5zdGFsbCBuZ2lueCBqcSAteQ0Kc2VydmVyTmFtZT0kKGN1cmwgLXMgLUggTWV0YWRhdGE6dHJ1ZSAiaHR0cDovLzE2OS4yNTQuMTY5LjI1NC9tZXRhZGF0YS9pbnN0YW5jZS9jb21wdXRlLz9hcGktdmVyc2lvbj0yMDE3LTA4LTAxIiB8IGpxIC1yIC5zdWJzY3JpcHRpb25JZCktJChjdXJsIC1zIC1IIE1ldGFkYXRhOnRydWUgImh0dHA6Ly8xNjkuMjU0LjE2OS4yNTQvbWV0YWRhdGEvaW5zdGFuY2UvY29tcHV0ZS8/YXBpLXZlcnNpb249MjAxNy0wOC0wMSIgfCBqcSAtciAucmVzb3VyY2VHcm91cE5hbWUpDQpjYXQgPDwgRU9GID4+IC9ldGMvbmdpbngvY29uZi5kL215YXBwLmNvbmYNCnNlcnZlciB7DQogIGxpc3RlbiA4MDgwOw0KDQogIHNlcnZlcl9uYW1lICRzZXJ2ZXJOYW1lLndlc3RldXJvcGUuY2xvdWRhcHAuYXp1cmUuY29tOw0KDQogIGxvY2F0aW9uIC8gew0KICAgICAgcHJveHlfcGFzcyBodHRwOi8vMTAuMC4zMi4xMDAvOw0KICB9DQp9DQpFT0YNCnN1ZG8gbmdpbnggLXMgcmVsb2Fk"
+        "script": "I2Nsb3VkLWNvbmZpZw0KcnVuY21kOg0KICAgIC0gY3VybCBodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vdGt1YmljYTEyL2F6dXJlLW5ldHdvcmtpbmctbGFiL21hc3Rlci9Bcm1FbnYvc2NyaXB0cy9uZ2lueC5zaCB8IHN1ZG8gYmFzaA=="
     },
     "resources": [
         {

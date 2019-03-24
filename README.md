@@ -28,3 +28,28 @@ There are couple of parameters you can use to tweek your environment such as whe
 # Network diagram
 
 ![diagram](./img/diagram.png)
+
+# Tests after environment is deployed
+Connect to jump server on its public ip.
+
+## Check you can access app1 VM only via jump server (NSG)
+ssh tomas@10.0.16.4 (should work)
+ssh tomas@10.0.1.4 (go to hub vm) -> ssh tomas@10.0.16.4 (should fail)
+
+## Check app1 talks to outside of VNET via firewall
+ssh tomas@10.0.16.4 -> curl www.microsoft.com vs. curl www.google.com (for Azure Firewall)
+or connect to 3rd party appliance (10.0.3.4) and run tcpdump to check packets going throw
+
+curl 10.0.32.4 (check access from app1 to web1)
+It goes over firewall (sudo apt update && sudo apt install traceroute -y && sudo traceroute -T 10.0.32.4
+)
+
+## Test load balancer
+curl 10.0.32.4
+curl 10.0.32.5
+curl 10.0.32.100 (try multiple times to show responses from different servers)
+
+## Check web farm is exposed via reverse proxy
+Obtain reverse proxy public IP (IP of App Gateway or public IP of LB in front of 3rd party VMs)
+curl publicip:8080
+
