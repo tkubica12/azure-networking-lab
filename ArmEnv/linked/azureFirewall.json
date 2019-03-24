@@ -105,6 +105,33 @@
                                 }
                             ]
                         }
+                    },
+                    {
+                        "name": "allowGithub",
+                        "properties": {
+                            "priority": 120,
+                            "action": {
+                                "type": "Allow"
+                            },
+                            "rules": [
+                                {
+                                    "name": "ubuntu",
+                                    "protocols": [
+                                        {
+                                            "port": "80",
+                                            "protocolType": "http"
+                                        },
+                                        {
+                                            "port": "443",
+                                            "protocolType": "https"
+                                        }
+                                    ],
+                                    "targetUrls": [
+                                        "*github.com"
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 ],
                 "networkRuleCollections": [
