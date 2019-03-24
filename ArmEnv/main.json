@@ -158,7 +158,8 @@
             "comments": "Allow spoke networks to share VPN gateway in hub to talk to onprem",
             "apiVersion": "2017-05-10",
             "dependsOn": [
-                "deployVpns"
+                "deployVpns",
+                "deployVpnConnections"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -375,7 +376,8 @@
             "comments": "Deploy load-balanced web farm",
             "dependsOn": [
                 "deployNetworking",
-                "deployRouterNva"
+                "deployRouterNva",
+                "deployAzureFirewall"
             ],
             "apiVersion": "2017-05-10",
             "properties": {
