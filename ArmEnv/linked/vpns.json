@@ -16,8 +16,12 @@
             "name": "[concat(parameters('namePrefix'), '-central-vpn-ip')]",
             "comments": "Deploy Central VPN IP (onpremis)",
             "location": "[variables('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "zones": [],
             "properties": {
-                "publicIPAllocationMethod": "Dynamic"
+                "publicIPAllocationMethod": "Static"
             }
         },
         {
@@ -26,8 +30,12 @@
             "name": "[concat(parameters('namePrefix'), '-vpn-ip')]",
             "comments": "Deploy Hub VPN IP",
             "location": "[variables('location')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "zones": [],
             "properties": {
-                "publicIPAllocationMethod": "Dynamic"
+                "publicIPAllocationMethod": "Static"
             }
         },
         {
@@ -55,8 +63,8 @@
                     }
                 ],
                 "sku": {
-                    "name": "Basic",
-                    "tier": "Basic"
+                    "name": "VpnGw1AZ",
+                    "tier": "VpnGw1AZ"
                 },
                 "gatewayType": "Vpn",
                 "vpnType": "RouteBased",
@@ -88,8 +96,8 @@
                     }
                 ],
                 "sku": {
-                    "name": "Basic",
-                    "tier": "Basic"
+                    "name": "VpnGw1AZ",
+                    "tier": "VpnGw1AZ"
                 },
                 "gatewayType": "Vpn",
                 "vpnType": "RouteBased",
