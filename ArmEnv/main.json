@@ -52,6 +52,7 @@
         "linkedUrlVmSingle": "[concat(variables('linkedUrlBase'), 'vmSingle.json')]",
         "linkedUrlWebFarm": "[concat(variables('linkedUrlBase'), 'webFarm.json')]",
         "linkedUrlReverseProxies": "[concat(variables('linkedUrlBase'), 'reverseProxies.json')]",
+        "linkedUrlWebApps": "[concat(variables('linkedUrlBase'), 'webApps.json')]",
         "adminUsername": "tomas",
         "adminPassword": "Azure12345678",
         "fwIpAppliance": "10.0.3.4",
@@ -459,6 +460,26 @@
                 "parameters": {
                     "rpSubnetId": {
                         "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-hub-net'), 'rp')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployWebApps",
+            "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "deployNetworking"
+            ],
+            "apiVersion": "2017-05-10",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlAppGw')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "namePrefix": {
+                        "value": "[parameters('namePrefix')]"
                     }
                 }
             }

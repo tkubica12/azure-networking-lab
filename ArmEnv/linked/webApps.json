@@ -1,0 +1,190 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "namePrefix": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "secondaryLocation": "francecentral"
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Web/serverfarms",
+            "kind": "app",
+            "name": "[concat(parameters('namePrefix'), 'serviceplan-region1')]",
+            "location": "[variables('location')]",
+            "properties": {},
+            "dependsOn": [],
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            }
+        },
+        {
+            "apiVersion": "2017-08-01",
+            "type": "Microsoft.Web/serverfarms",
+            "kind": "app",
+            "name": "[concat(parameters('namePrefix'), 'serviceplan-region2')]",
+            "location": "[variables('secondaryLocation')]",
+            "properties": {},
+            "dependsOn": [],
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            }
+        },
+        {
+            "apiVersion": "2016-08-01",
+            "type": "Microsoft.Web/sites",
+            "kind": "app",
+            "name": "[concat(parameters('namePrefix'), '-globalwebregion1')]",
+            "location": "[variables('location')]",
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('namePrefix'), 'serviceplan-region1'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', concat(parameters('namePrefix'), 'serviceplan-region1'))]"
+            ],
+            "resources": [
+                {
+                    "type": "virtualNetworkConnections",
+                    "name": "vnetIntegration",
+                    "location": "[variables('location')]",
+                    "apiVersion": "2018-02-01",
+                    "properties": {
+                        "vnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-spoke2-net'), 'paas-integration-sub')]",
+                        "isSwift": true
+                    },
+                    "dependsOn": [
+                        "[concat(parameters('namePrefix'), '-globalwebregion1')]"
+                    ]
+                }
+            ]
+        },
+        {
+            "apiVersion": "2016-08-01",
+            "type": "Microsoft.Web/sites",
+            "kind": "app",
+            "name": "[concat(parameters('namePrefix'), '-globalwebregion2')]",
+            "location": "[variables('secondaryLocation')]",
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('namePrefix'), 'serviceplan-region2'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', concat(parameters('namePrefix'), 'serviceplan-region2'))]"
+            ]
+        },
+        {
+            "apiVersion": "2018-08-01",
+            "type": "Microsoft.Network/frontdoors",
+            "name": "[concat(parameters('namePrefix'), '-globalniweb')]",
+            "location": "global",
+            "properties": {
+                "friendlyName": "[concat(parameters('namePrefix'), '-globalniweb')]",
+                "enabledState": "Enabled",
+                "healthProbeSettings": [
+                    {
+                        "name": "healthProbeSettings-1553542398222",
+                        "properties": {
+                            "path": "/",
+                            "protocol": "Https",
+                            "intervalInSeconds": 30
+                        }
+                    }
+                ],
+                "loadBalancingSettings": [
+                    {
+                        "name": "loadBalancingSettings-1553542398222",
+                        "properties": {
+                            "sampleSize": 4,
+                            "successfulSamplesRequired": 2,
+                            "additionalLatencyMilliseconds": 0
+                        }
+                    }
+                ],
+                "frontendEndpoints": [
+                    {
+                        "name": "[concat(parameters('namePrefix'), '-globalniweb-azurefd-net')]",
+                        "properties": {
+                            "hostName": "[concat(parameters('namePrefix'), '-globalniweb.azurefd.net')]",
+                            "sessionAffinityEnabledState": "Enabled",
+                            "sessionAffinityTtlSeconds": 0
+                        }
+                    }
+                ],
+                "backendPools": [
+                    {
+                        "name": "globalwebs",
+                        "properties": {
+                            "backends": [
+                                {
+                                    "address": "[concat(parameters('namePrefix'), '-globalwebregion1.azurewebsites.net')]",
+                                    "enabledState": "Enabled",
+                                    "httpPort": 80,
+                                    "httpsPort": 443,
+                                    "priority": 1,
+                                    "weight": 50,
+                                    "backendHostHeader": "[concat(parameters('namePrefix'),'-globalwebregion1.azurewebsites.net')]"
+                                },
+                                {
+                                    "address": "[concat(parameters('namePrefix'),'-globalwebregion2.azurewebsites.net')]",
+                                    "enabledState": "Enabled",
+                                    "httpPort": 80,
+                                    "httpsPort": 443,
+                                    "priority": 1,
+                                    "weight": 50,
+                                    "backendHostHeader": "[concat(parameters('namePrefix'),'-globalwebregion2.azurewebsites.net')]"
+                                }
+                            ],
+                            "loadBalancingSettings": {
+                                "id": "[resourceId('Microsoft.Network/frontdoors/loadBalancingSettings/', 'tomas-globalniweb', 'loadBalancingSettings-1553542398222')]"
+                            },
+                            "healthProbeSettings": {
+                                "id": "[resourceId('Microsoft.Network/frontdoors/healthProbeSettings/', 'tomas-globalniweb', 'healthProbeSettings-1553542398222')]"
+                            }
+                        }
+                    }
+                ],
+                "routingRules": [
+                    {
+                        "name": "forward",
+                        "properties": {
+                            "frontendEndpoints": [
+                                {
+                                    "id": "[resourceId('Microsoft.Network/frontdoors/frontendEndpoints/', 'tomas-globalniweb', concat(parameters('namePrefix'), '-globalniweb-azurefd-net'))]"
+                                }
+                            ],
+                            "acceptedProtocols": [
+                                "Http",
+                                "Https"
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ],
+                            "customForwardingPath": null,
+                            "forwardingProtocol": "MatchRequest",
+                            "enabledState": "Enabled",
+                            "backendPool": {
+                                "id": "[resourceId('Microsoft.Network/frontdoors/backendPools/', 'tomas-globalniweb', 'globalwebs')]"
+                            },
+                            "cacheConfiguration": {
+                                "queryParameterStripDirective": "StripNone",
+                                "dynamicCompression": "Enabled"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
