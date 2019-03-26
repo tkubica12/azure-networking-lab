@@ -474,7 +474,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[variables('linkedUrlAppGw')]",
+                    "uri": "[variables('linkedUrlWebApps')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
