@@ -62,3 +62,11 @@ It should be possible from app1 VM due to service endpoint.
 ssh tomas@10.0.16.4 (jump to app1) 
 sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
 
+## Check connection to onpremises resource
+from jump server
+ssh tomas@10.254.0.4
+
+## Check PaaS (App Service) to VNET integration
+Open globalwebregion1 WebApp and click on console
+From PaaS check connectivity to VMs in VNET:
+tcpping 10.0.0.4:22

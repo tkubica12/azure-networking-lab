@@ -156,7 +156,18 @@
                     {
                         "name": "paas-integration-sub",
                         "properties": {
-                            "addressPrefix": "10.0.33.0/24"
+                            "addressPrefix": "10.0.33.0/24",
+                            "delegations": [
+                                {
+                                    "name": "delegation",
+                                    "properties": {
+                                        "serviceName": "Microsoft.Web/serverfarms",
+                                        "actions": [
+                                            "Microsoft.Network/virtualNetworks/subnets/action"
+                                        ]
+                                    }
+                                }
+                            ]
                         }
                     }
                 ]

@@ -58,7 +58,7 @@
             "resources": [
                 {
                     "type": "virtualNetworkConnections",
-                    "name": "vnetIntegration",
+                    "name": "c757bf82-7d7a-4a9a-b93d-826b28f1a0a0_paas-integration-sub",
                     "location": "[variables('location')]",
                     "apiVersion": "2018-02-01",
                     "properties": {
