@@ -57,17 +57,17 @@
             ],
             "resources": [
                 {
-                    "type": "virtualNetworkConnections",
-                    "name": "c757bf82-7d7a-4a9a-b93d-826b28f1a0a0_paas-integration-sub",
-                    "location": "[variables('location')]",
+                    "name": "virtualNetwork",
+                    "type": "config",
                     "apiVersion": "2018-02-01",
-                    "properties": {
-                        "vnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-spoke2-net'), 'paas-integration-sub')]",
-                        "isSwift": true
-                    },
+                    "location": "[variables('location')]",
                     "dependsOn": [
                         "[concat(parameters('namePrefix'), '-globalwebregion1')]"
-                    ]
+                    ],
+                    "properties": {
+                        "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-spoke2-net'), 'paas-integration-sub')]",
+                        "swiftSupported": true
+                    }
                 }
             ]
         },
