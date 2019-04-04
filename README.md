@@ -27,7 +27,7 @@ There are couple of parameters you can use to tweek your environment such as whe
 
 # Network diagram
 
-![diagram](./img/diagram.png)
+![diagram](./img/diagramNative.png)
 
 # Tests after environment is deployed
 Connect to jump server on its public ip.

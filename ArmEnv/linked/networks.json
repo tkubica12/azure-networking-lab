@@ -66,6 +66,9 @@
                             "addressPrefix": "10.0.3.128/26",
                             "networkSecurityGroup": {
                                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('namePrefix'), '-hub-rp-fw'))]"
+                            },
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('namePrefix'), '-routesFromRp'))]"
                             }
                         }
                     },
@@ -492,6 +495,24 @@
                         "name": "defaultToNva",
                         "properties": {
                             "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[parameters('fwIp')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[concat(parameters('namePrefix'), '-routesFromRp')]",
+            "apiVersion": "2018-07-01",
+            "location": "[variables('location')]",
+            "properties": {
+                "routes": [
+                    {
+                        "name": "defaultToNva",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/8",
                             "nextHopType": "VirtualAppliance",
                             "nextHopIpAddress": "[parameters('fwIp')]"
                         }

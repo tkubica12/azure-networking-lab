@@ -17,17 +17,13 @@
             "type": "Microsoft.Network/applicationGateways",
             "apiVersion": "2018-12-01",
             "location": "[variables('location')]",
-            "zones": [
-                "1",
-                "2"
-            ],
             "dependsOn": [
                 "appGw-ip"
             ],
             "properties": {
                 "sku": {
-                    "name": "WAF_v2",
-                    "tier": "WAF_v2"
+                    "name": "WAF",
+                    "tier": "WAF"
                 },
                 "gatewayIPConfigurations": [
                     {
