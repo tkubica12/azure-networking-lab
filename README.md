@@ -70,3 +70,6 @@ ssh tomas@10.254.0.4
 Open globalwebregion1 WebApp and click on console
 From PaaS check connectivity to VMs in VNET:
 tcpping 10.0.0.4:22
+
+# Presentation in Czech
+[https://github.com/tkubica12/azure-networking-lab/blob/master/img/enterpriseNetworkingPPT_CZ.pdf](https://github.com/tkubica12/azure-networking-lab/blob/master/img/enterpriseNetworkingPPT_CZ.pdf)
