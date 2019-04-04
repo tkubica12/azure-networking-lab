@@ -22,8 +22,8 @@
             ],
             "properties": {
                 "sku": {
-                    "name": "WAF",
-                    "tier": "WAF"
+                    "name": "WAF_Large",
+                    "tier": "WAF_Large"
                 },
                 "gatewayIPConfigurations": [
                     {
