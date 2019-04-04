@@ -56,11 +56,11 @@ curl publicip:8080
 ## Test IaaS to PaaS secure connection via Service Endpoint
 Make sure you are not able to access your SQL server from jump server or your laptop over Internet. SQL server name is generated and it will be different in your case:
 
-sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
+/opt/mssql-tools/bin/sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
 
 It should be possible from app1 VM due to service endpoint.
 ssh tomas@10.0.16.4 (jump to app1) 
-sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
+/opt/mssql-tools/bin/sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
 
 ## Check connection to onpremises resource
 from jump server
