@@ -23,7 +23,8 @@
             "properties": {
                 "sku": {
                     "name": "WAF_Large",
-                    "tier": "WAF"
+                    "tier": "WAF",
+                    "capacity": 1
                 },
                 "gatewayIPConfigurations": [
                     {
@@ -117,10 +118,6 @@
                     "firewallMode": "Detection",
                     "ruleSetType": "OWASP",
                     "ruleSetVersion": "3.0"
-                },
-                "autoscaleConfiguration": {
-                    "minCapacity": "2",
-                    "maxCapacity": "10"
                 }
             }
         },
