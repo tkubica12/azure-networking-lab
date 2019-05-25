@@ -6,7 +6,8 @@
             "type": "string",
             "metadata": {
                 "description": "Your resources prefix, eg. your short name"
-            }
+            },
+            "defaultValue": "demo"
         },
         "firewallType": {
             "type": "string",
@@ -93,7 +94,7 @@
                 },
                 "parameters": {
                     "dbNamePrefix": {
-                        "value": "[parameters('namePrefix')]"
+                        "value": "[toLower(parameters('namePrefix'))]"
                     },
                     "adminUsername": {
                         "value": "[variables('adminUsername')]"

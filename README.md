@@ -71,5 +71,8 @@ Open globalwebregion1 WebApp and click on console
 From PaaS check connectivity to VMs in VNET:
 tcpping 10.0.0.4:22
 
+## Check Azure Front Door
+Get front door IP and test connectivity to WebApp
+
 # Presentation in Czech
 [https://github.com/tkubica12/azure-networking-lab/blob/master/img/enterpriseNetworkingPPT_CZ.pdf](https://github.com/tkubica12/azure-networking-lab/blob/master/img/enterpriseNetworkingPPT_CZ.pdf)
