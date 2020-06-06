@@ -2,7 +2,7 @@
 az group create -n tomas-rg -l westeurope
 
 # Deploy template
-az group deployment create -g tomas-rg \
+az deployment group create -g tomas-rg \
     --template-file main.json \
     --parameters namePrefix=tomas 
 
@@ -13,7 +13,7 @@ az group deployment create -g tomas-rg \
     --parameters namePrefix=tomas \
     --parameters firewallType=Appliance
 
-## Template defaults to Azure Application Gatewaz. If you want to use 3rd party solution (Linux with NGINX), specify use this:
+## Template defaults to Azure Application Gateway. If you want to use 3rd party solution (Linux with NGINX), specify use this:
 az group deployment create -g tomas-rg \
     --template-file main.json \
     --parameters namePrefix=tomas \
