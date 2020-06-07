@@ -80,6 +80,9 @@
                     },
                     "fwIp": {
                         "value": "[variables(concat('fwIp', parameters('firewallType')))]"
+                    },
+                    "useVpn": {
+                        "value": "[parameters('deployVpn')]"
                     }
                 }
             }
