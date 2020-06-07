@@ -30,35 +30,24 @@
         {
             "name": "[variables('dbSrvName')]",
             "type": "Microsoft.Sql/servers",
-            "apiVersion": "2014-04-01-preview",
+            "apiVersion": "2019-06-01-preview",
             "location": "[variables('location')]",
             "properties": {
                 "administratorLogin": "[parameters('adminUsername')]",
                 "administratorLoginPassword": "[parameters('adminPassword')]",
-                "version": "12.0"
+                "version": "12.0",
+                "publicNetworkAccess": "Disabled"
             },
             "resources": [
                 {
                     "name": "[variables('dbName')]",
                     "type": "databases",
-                    "apiVersion": "2015-01-01",
+                    "apiVersion": "2019-06-01-preview",
                     "location": "[variables('location')]",
                     "properties": {
                         "edition": "Basic",
                         "collation": "SQL_Latin1_General_CP1_CI_AS",
                         "requestedServiceObjectiveName": "Basic"
-                    },
-                    "dependsOn": [
-                        "[variables('dbSrvName')]"
-                    ]
-                },
-                {
-                    "name": "linkForSQL",
-                    "type": "virtualNetworkRules",
-                    "apiVersion": "2015-05-01-preview",
-                    "properties": {
-                        "virtualNetworkSubnetId": "[parameters('subnetRef')]",
-                        "ignoreMissingVnetServiceEndpoint": true
                     },
                     "dependsOn": [
                         "[variables('dbSrvName')]"

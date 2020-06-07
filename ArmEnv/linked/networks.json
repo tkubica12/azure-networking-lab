@@ -232,14 +232,6 @@
                             "routeTable": {
                                 "id": "[resourceId('Microsoft.Network/routeTables', concat(parameters('namePrefix'), '-defaultRoutes'))]"
                             },
-                            "serviceEndpoints": [
-                                {
-                                    "service": "Microsoft.Sql",
-                                    "locations": [
-                                        "westeurope"
-                                    ]
-                                }
-                            ],
                             "privateEndpointNetworkPolicies": "Disabled",
                             "privateLinkServiceNetworkPolicies": "Enabled"
                         }
