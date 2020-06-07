@@ -127,7 +127,7 @@
             "name": "appGw-ip",
             "location": "[variables('location')]",
             "sku": {
-                "name": "Basic"
+                "name": "Standard"
             },
             "zones": [],
             "properties": {

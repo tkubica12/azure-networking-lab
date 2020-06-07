@@ -7,6 +7,13 @@
         },
         "fwIp": {
             "type": "string"
+        },
+        "useVpn": {
+            "type": "bool",
+            "metadata": {
+                "description": "Indicates whether VPN GWs are deployed and used from spokes via hub."
+            },
+            "defaultValue": true
         }
     },
     "variables": {
@@ -177,34 +184,6 @@
             }
         },
         {
-            "apiVersion": "2015-06-15",
-            "type": "Microsoft.Network/virtualNetworks",
-            "name": "[concat(parameters('namePrefix'), '-central-net')]",
-            "comments": "Deploy on-prem simulation network",
-            "location": "[variables('location')]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "10.254.0.0/16"
-                    ]
-                },
-                "subnets": [
-                    {
-                        "name": "server-sub",
-                        "properties": {
-                            "addressPrefix": "10.254.0.0/24"
-                        }
-                    },
-                    {
-                        "name": "GatewaySubnet",
-                        "properties": {
-                            "addressPrefix": "10.254.1.0/24"
-                        }
-                    }
-                ]
-            }
-        },
-        {
             "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
             "comments": "Configure peering from Spoke1 to Hub",
             "dependsOn": [
@@ -218,7 +197,7 @@
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
                 "allowGatewayTransit": false,
-                "useRemoteGateways": false,
+                "useRemoteGateways": "[parameters('useVpn')]",
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
                 }
@@ -239,7 +218,7 @@
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
                 "allowGatewayTransit": false,
-                "useRemoteGateways": false,
+                "useRemoteGateways": "[parameters('useVpn')]",
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
                 }
@@ -260,7 +239,7 @@
             "properties": {
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
-                "allowGatewayTransit": false,
+                "allowGatewayTransit": "[parameters('useVpn')]",
                 "useRemoteGateways": false,
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke1-net'))]"
@@ -283,7 +262,7 @@
             "properties": {
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
-                "allowGatewayTransit": false,
+                "allowGatewayTransit": "[parameters('useVpn')]",
                 "useRemoteGateways": false,
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"

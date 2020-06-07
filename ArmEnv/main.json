@@ -64,6 +64,9 @@
             "name": "deployNetworking",
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy networks, NSGs, peerings",
+            "dependsOn": [
+                "deployVpns"
+            ],
             "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
@@ -114,9 +117,6 @@
             "condition": "[parameters('deployVpn')]",
             "comments": "Deploy VPNs",
             "apiVersion": "2019-10-01",
-            "dependsOn": [
-                "deployNetworking"
-            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -320,7 +320,6 @@
             "condition": "[parameters('deployVpn')]",
             "comments": "Deploy on-prem simulation server",
             "dependsOn": [
-                "deployNetworking",
                 "deployVpns"
             ],
             "apiVersion": "2019-10-01",
@@ -463,5 +462,6 @@
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+    }
 }

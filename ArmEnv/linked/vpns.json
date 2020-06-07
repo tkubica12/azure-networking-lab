@@ -11,6 +11,34 @@
     },
     "resources": [
         {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[concat(parameters('namePrefix'), '-central-net')]",
+            "comments": "Deploy on-prem simulation network",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.254.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "server-sub",
+                        "properties": {
+                            "addressPrefix": "10.254.0.0/24"
+                        }
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "10.254.1.0/24"
+                        }
+                    }
+                ]
+            }
+        },
+        {
             "apiVersion": "2018-08-01",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[concat(parameters('namePrefix'), '-central-vpn-ip')]",
@@ -19,7 +47,8 @@
             "sku": {
                 "name": "Standard"
             },
-            "zones": [],
+            "zones": [
+            ],
             "properties": {
                 "publicIPAllocationMethod": "Static"
             }
@@ -33,7 +62,8 @@
             "sku": {
                 "name": "Standard"
             },
-            "zones": [],
+            "zones": [
+            ],
             "properties": {
                 "publicIPAllocationMethod": "Static"
             }
@@ -45,7 +75,8 @@
             "comments": "Deploy central (onprem) VPN",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-central-vpn-ip')]"
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-central-vpn-ip')]",
+                "[concat(parameters('namePrefix'), '-central-net')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -78,7 +109,8 @@
             "comments": "Deploy hub VPN",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-vpn-ip')]"
+                "[concat('Microsoft.Network/publicIPAddresses/', parameters('namePrefix'), '-vpn-ip')]",
+                "[concat(parameters('namePrefix'), '-central-net')]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -105,5 +137,6 @@
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+    }
 }

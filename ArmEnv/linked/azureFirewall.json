@@ -28,7 +28,7 @@
             }
         },
         {
-            "apiVersion": "2019-12-01",
+            "apiVersion": "2020-04-01",
             "type": "Microsoft.Network/azureFirewalls",
             "name": "[variables('firewallName')]",
             "location": "[variables('location')]",
@@ -45,7 +45,7 @@
                             },
                             "privateIPAddress": "10.0.3.196",
                             "privateIPAllocationMethod": "Static",
-                            "InternalPublicIPAddress": {
+                            "publicIPAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses/', variables('ipName'))]"
                             }
                         }
