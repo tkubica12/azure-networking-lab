@@ -15,15 +15,15 @@
         {
             "name": "appGw",
             "type": "Microsoft.Network/applicationGateways",
-            "apiVersion": "2018-12-01",
+            "apiVersion": "2019-12-01",
             "location": "[variables('location')]",
             "dependsOn": [
                 "appGw-ip"
             ],
             "properties": {
                 "sku": {
-                    "name": "WAF_Large",
-                    "tier": "WAF",
+                    "name": "WAF_v2",
+                    "tier": "WAF_v2",
                     "capacity": 1
                 },
                 "gatewayIPConfigurations": [
@@ -122,7 +122,7 @@
             }
         },
         {
-            "apiVersion": "2018-08-01",
+            "apiVersion": "2019-12-01",
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "appGw-ip",
             "location": "[variables('location')]",

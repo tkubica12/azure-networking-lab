@@ -18,7 +18,7 @@
         {
             "type": "Microsoft.Network/publicIPAddresses",
             "name": "[variables('ipName')]",
-            "apiVersion": "2018-10-01",
+            "apiVersion": "2019-12-01",
             "location": "[variables('location')]",
             "properties": {
                 "publicIPAllocationMethod": "Static"
@@ -28,7 +28,7 @@
             }
         },
         {
-            "apiVersion": "2018-06-01",
+            "apiVersion": "2019-12-01",
             "type": "Microsoft.Network/azureFirewalls",
             "name": "[variables('firewallName')]",
             "location": "[variables('location')]",

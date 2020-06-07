@@ -40,7 +40,7 @@
         }
     },
     "variables": {
-        "linkedUrlBase": "https://github.com/tkubica12/azure-networking-lab/raw/master/ArmEnv/linked/",
+        "linkedUrlBase": "https://raw.githubusercontent.com/tkubica12/azure-networking-lab/master/ArmEnv/linked/",
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
         "linkedUrlVpnConnections": "[concat(variables('linkedUrlBase'), 'vpnConnections.json')]",
@@ -64,7 +64,7 @@
             "name": "deployNetworking",
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy networks, NSGs, peerings",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -85,7 +85,7 @@
             "name": "deploySql",
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy PaaS SQL",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -113,7 +113,7 @@
             "type": "Microsoft.Resources/deployments",
             "condition": "[parameters('deployVpn')]",
             "comments": "Deploy VPNs",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "deployNetworking"
             ],
@@ -135,7 +135,7 @@
             "type": "Microsoft.Resources/deployments",
             "condition": "[parameters('deployVpn')]",
             "comments": "Deploy VPN Connections",
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "dependsOn": [
                 "deployVpns",
                 "deployOnpremServer"
@@ -154,29 +154,6 @@
             }
         },
         {
-            "name": "deployAllowRemoteGateway",
-            "type": "Microsoft.Resources/deployments",
-            "condition": "[parameters('deployVpn')]",
-            "comments": "Allow spoke networks to share VPN gateway in hub to talk to onprem",
-            "apiVersion": "2017-05-10",
-            "dependsOn": [
-                "deployVpns",
-                "deployVpnConnections"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('linkedUrlAllowRemoteGateway')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "namePrefix": {
-                        "value": "[parameters('namePrefix')]"
-                    }
-                }
-            }
-        },
-        {
             "name": "deployRouterNva",
             "type": "Microsoft.Resources/deployments",
             "condition": "[equals(parameters('firewallType'), 'Appliance')]",
@@ -184,7 +161,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -221,7 +198,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -245,7 +222,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -278,7 +255,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -311,7 +288,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -346,7 +323,7 @@
                 "deployNetworking",
                 "deployVpns"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -381,7 +358,7 @@
                 "deployRouterNva",
                 "deployAzureFirewall"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -421,7 +398,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -451,7 +428,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
@@ -471,7 +448,7 @@
             "dependsOn": [
                 "deployNetworking"
             ],
-            "apiVersion": "2017-05-10",
+            "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
