@@ -72,7 +72,7 @@
                                             "protocolType": "https"
                                         }
                                     ],
-                                    "targetUrls": [
+                                    "TargetFqdns": [
                                         "*microsoft.com"
                                     ]
                                 }
@@ -99,7 +99,7 @@
                                             "protocolType": "https"
                                         }
                                     ],
-                                    "targetUrls": [
+                                    "TargetFqdns": [
                                         "*ubuntu.com"
                                     ]
                                 }
@@ -126,7 +126,7 @@
                                             "protocolType": "https"
                                         }
                                     ],
-                                    "targetUrls": [
+                                    "TargetFqdns": [
                                         "*github.com"
                                     ]
                                 }
