@@ -8,7 +8,6 @@
     },
     "variables": {
         "location": "[resourceGroup().location]",
-        "vnetId": "/subscriptions/a0f4a733-4fce-4d49-b8a8-d30541fc1b45/resourceGroups/tomas-rg/providers/Microsoft.Network/virtualNetworks/tomas-hub-net",
         "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways', 'appGw')]"
     },
     "resources": [
@@ -50,7 +49,7 @@
                     {
                         "name": "appGatewayFrontendPort",
                         "properties": {
-                            "Port": 8080
+                            "Port": 80
                         }
                     }
                 ],

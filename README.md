@@ -3,15 +3,17 @@
 This lab (guide.sh) will guide you throw creation of enterprise networking environment in Azure including:
 * VNETs and subnets
 * Hub-and-spoke topology with VNET peering
-* Load balancing
+* Load balancing to different availability zones
 * Network Security Groups
 * Using jump server to enhance security
 * VPN connectivity to on-premises
 * Firewall/router to filter traffic between spokes and access Internet (Azure Firewall od 3rd party option)
 * IaaS to PaaS integration via Azure Firewall or 3rd party routing/firewall (using Linux router)
-* IaaS to PaaS direct integration via Service Endpoints
+* PaaS network integration with Private link
 * Deploying reverse proxy (and WAF) in HA to securely expose apps to Internet using Azure Application Gateway or 3rd party solution (NGINX)
 * Using ARM templates for automation
+* Integrating WebApps (PaaS) with VNET
+* Global application delivery with Front Door
 
 Folow instructions in guide.sh and use your name and pod number assigned by instructor.
 Instructor will use central.sh to deploy simulation of on-premises environment.
@@ -51,14 +53,10 @@ curl 10.0.32.100 (try multiple times to show responses from different servers)
 
 ## Check web farm is exposed via reverse proxy
 Obtain reverse proxy public IP (IP of App Gateway or public IP of LB in front of 3rd party VMs)
-curl publicip:8080
 
-## Test IaaS to PaaS secure connection via Service Endpoint
+## Test IaaS to PaaS secure connection via Private Link
 Make sure you are not able to access your SQL server from jump server or your laptop over Internet. SQL server name is generated and it will be different in your case:
 
-/opt/mssql-tools/bin/sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
-
-It should be possible from app1 VM due to service endpoint.
 ssh tomas@10.0.16.4 (jump to app1) 
 /opt/mssql-tools/bin/sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
 
@@ -72,7 +70,4 @@ From PaaS check connectivity to VMs in VNET:
 tcpping 10.0.0.4:22
 
 ## Check Azure Front Door
-Get front door IP and test connectivity to WebApp
-
-# Presentation in Czech
-[https://github.com/tkubica12/azure-networking-lab/blob/master/img/enterpriseNetworkingPPT_CZ.pdf](https://github.com/tkubica12/azure-networking-lab/blob/master/img/enterpriseNetworkingPPT_CZ.pdf)
+Get front door FQDN and test connectivity to WebApp
