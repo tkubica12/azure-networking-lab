@@ -131,7 +131,7 @@
             },
             "zones": [],
             "properties": {
-                "publicIPAllocationMethod": "Dynamic",
+                "publicIPAllocationMethod": "Static",
                 "idleTimeoutInMinutes": "4"
             }
         }
