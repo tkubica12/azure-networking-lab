@@ -92,6 +92,9 @@
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy PaaS SQL",
             "apiVersion": "2019-10-01",
+            "dependsOn": [
+                "deployNetworking"
+            ],
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {

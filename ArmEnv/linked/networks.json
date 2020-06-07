@@ -17,7 +17,8 @@
         }
     },
     "variables": {
-        "location": "[resourceGroup().location]"
+        "location": "[resourceGroup().location]",
+        "privateDnsZone": "[concat(parameters('namePrefix'), '.cz')]"
     },
     "resources": [
         {
@@ -74,6 +75,64 @@
                             "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"
                         },
                         "registrationEnabled": false
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[variables('privateDnsZone')]",
+            "location": "global",
+            "properties": {
+            },
+            "resources": [
+                {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "[concat(variables('privateDnsZone'), '/hub-net')]",
+                    "dependsOn": [
+                        "[variables('privateDnsZone')]",
+                        "[concat(parameters('namePrefix'), '-hub-net')]"
+                    ],
+                    "location": "global",
+                    "properties": {
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
+                        },
+                        "registrationEnabled": true
+                    }
+                },
+                {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "[concat(variables('privateDnsZone'), '/spoke1-net')]",
+                    "dependsOn": [
+                        "[variables('privateDnsZone')]",
+                        "[concat(parameters('namePrefix'), '-spoke1-net')]"
+                    ],
+                    "location": "global",
+                    "properties": {
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke1-net'))]"
+                        },
+                        "registrationEnabled": true
+                    }
+                },
+                {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "[concat(variables('privateDnsZone'), '/spoke2-net')]",
+                    "dependsOn": [
+                        "[variables('privateDnsZone')]",
+                        "[concat(parameters('namePrefix'), '-spoke2-net')]"
+                    ],
+                    "location": "global",
+                    "properties": {
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"
+                        },
+                        "registrationEnabled": true
                     }
                 }
             ]
