@@ -65,7 +65,54 @@
                     ]
                 }
             ]
+        },
+        {
+            "name": "sqlPlink",
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2020-03-01",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', variables('dbSrvName'))]"
+            ],
+            "properties": {
+                "subnet": {
+                    "id": "[parameters('subnetRef')]"
+                },
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "sqlPlink",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Sql/servers', variables('dbSrvName'))]",
+                            "groupIds": [
+                                "sqlServer"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "resources": [
+                {
+                    "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+                    "apiVersion": "2020-03-01",
+                    "name": "sqlPlink/sqlPlinkZoneGroup",
+                    "location": "[variables('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Network/privateEndpoints','sqlPlink')]"
+                    ],
+                    "properties": {
+                        "privateDnsZoneConfigs": [
+                            {
+                                "name": "privatelink-database-windows-net",
+                                "properties": {
+                                    "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]"
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
         }
     ],
-    "outputs": {}
+    "outputs": {
+    }
 }

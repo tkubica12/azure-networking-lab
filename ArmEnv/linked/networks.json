@@ -21,6 +21,64 @@
     },
     "resources": [
         {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "privatelink.database.windows.net",
+            "location": "global",
+            "properties": {
+            },
+            "resources": [
+                {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "privatelink.database.windows.net/hub-net",
+                    "dependsOn": [
+                        "privatelink.database.windows.net",
+                        "[concat(parameters('namePrefix'), '-hub-net')]"
+                    ],
+                    "location": "global",
+                    "properties": {
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
+                        },
+                        "registrationEnabled": false
+                    }
+                },
+                {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "privatelink.database.windows.net/spoke1-net",
+                    "dependsOn": [
+                        "privatelink.database.windows.net",
+                        "[concat(parameters('namePrefix'), '-spoke1-net')]"
+                    ],
+                    "location": "global",
+                    "properties": {
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke1-net'))]"
+                        },
+                        "registrationEnabled": false
+                    }
+                },
+                {
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "name": "privatelink.database.windows.net/spoke2-net",
+                    "dependsOn": [
+                        "privatelink.database.windows.net",
+                        "[concat(parameters('namePrefix'), '-spoke2-net')]"
+                    ],
+                    "location": "global",
+                    "properties": {
+                        "virtualNetwork": {
+                            "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"
+                        },
+                        "registrationEnabled": false
+                    }
+                }
+            ]
+        },
+        {
             "apiVersion": "2018-04-01",
             "type": "Microsoft.Network/virtualNetworks",
             "name": "[concat(parameters('namePrefix'), '-hub-net')]",
@@ -122,7 +180,9 @@
                                         "westeurope"
                                     ]
                                 }
-                            ]
+                            ],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
                         }
                     },
                     {
