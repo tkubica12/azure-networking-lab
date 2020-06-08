@@ -36,6 +36,7 @@
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('ipName'))]"
             ],
             "properties": {
+                "threatIntelMode": "Deny",
                 "ipConfigurations": [
                     {
                         "name": "IpConf",
@@ -128,6 +129,33 @@
                                     ],
                                     "TargetFqdns": [
                                         "*github.com"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "allowMaliciousTest",
+                        "properties": {
+                            "priority": 130,
+                            "action": {
+                                "type": "Allow"
+                            },
+                            "rules": [
+                                {
+                                    "name": "clicnews.com",
+                                    "protocols": [
+                                        {
+                                            "port": "80",
+                                            "protocolType": "http"
+                                        },
+                                        {
+                                            "port": "443",
+                                            "protocolType": "https"
+                                        }
+                                    ],
+                                    "TargetFqdns": [
+                                        "clicnews.com"
                                     ]
                                 }
                             ]

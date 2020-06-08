@@ -56,6 +56,9 @@ ssh tomas@10.0.16.8
 
 curl 10.0.32.4 # check access from app1 to web1
 
+# Test threat intelligence
+curl clicnews.com # Allowed from unprotected jump, denied from App1 behind Azure Firewall
+
 # Traceroute via firewall
 sudo apt update && sudo apt install traceroute -y && sudo traceroute -T 10.0.32.4
 ```
