@@ -177,7 +177,6 @@
                             "patternsToMatch": [
                                 "/*"
                             ],
-                            "customForwardingPath": null,
                             "forwardingProtocol": "MatchRequest",
                             "enabledState": "Enabled",
                             "backendPool": {

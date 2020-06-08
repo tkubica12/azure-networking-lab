@@ -34,6 +34,11 @@ There are couple of parameters you can use to tweek your environment such as whe
 # Tests after environment is deployed
 Connect to jump server on its public ip.
 
+## Test Private DNS
+```bash
+dig networking-demo-app1-vm.networking-demo.cz
+```
+
 ## Check you can access app1 VM only via jump server (NSG)
 ```bash
 ssh tomas@10.0.16.8 # should work
