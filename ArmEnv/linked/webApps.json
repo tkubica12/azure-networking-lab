@@ -89,16 +89,76 @@
             ]
         },
         {
+            "type": "Microsoft.Network/frontDoorWebApplicationFirewallPolicies",
+            "name": "myWafPolicy",
+            "apiVersion": "2019-10-01",
+            "location": "[variables('location')]",
+            "tags": {},
+            "properties": {
+                "policySettings": {
+                    "enabledState": "Enabled",
+                    "mode": "Prevention",
+                    "redirectUrl": null,
+                    "customBlockResponseStatusCode": 403,
+                    "customBlockResponseBody": null
+                },
+                "customRules": {
+                    "rules": [
+                        {
+                            "name": "rateLimitFromCZ",
+                            "priority": 100,
+                            "enabledState": "Enabled",
+                            "ruleType": "RateLimitRule",
+                            "rateLimitDurationInMinutes": 1,
+                            "rateLimitThreshold": 5,
+                            "matchConditions": [
+                                {
+                                    "matchVariable": "RemoteAddr",
+                                    "selector": null,
+                                    "operator": "GeoMatch",
+                                    "negateCondition": false,
+                                    "matchValue": [
+                                        "CZ"
+                                    ],
+                                    "transforms": []
+                                }
+                            ],
+                            "action": "Block"
+                        }
+                    ]
+                },
+                "managedRules": {
+                    "managedRuleSets": [
+                        {
+                            "ruleSetType": "DefaultRuleSet",
+                            "ruleSetVersion": "1.0",
+                            "ruleGroupOverrides": [],
+                            "exclusions": []
+                        },
+                        {
+                            "ruleSetType": "Microsoft_BotManagerRuleSet",
+                            "ruleSetVersion": "1.0",
+                            "ruleGroupOverrides": [],
+                            "exclusions": []
+                        }
+                    ]
+                }
+            }
+        },
+        {
             "type": "Microsoft.Network/frontdoors",
             "name": "[concat(parameters('namePrefix'), '-globalniweb')]",
             "apiVersion": "2020-01-01",
+            "dependsOn": [
+                "myWafPolicy"
+            ],
             "location": "global",
             "properties": {
                 "friendlyName": "[concat(parameters('namePrefix'), '-globalniweb')]",
                 "enabledState": "Enabled",
                 "healthProbeSettings": [
                     {
-                        "name": "healthProbeSettings-1553542398222",
+                        "name": "globalWebProbe",
                         "properties": {
                             "path": "/",
                             "protocol": "Https",
@@ -110,7 +170,7 @@
                 ],
                 "loadBalancingSettings": [
                     {
-                        "name": "loadBalancingSettings-1553542398222",
+                        "name": "globalWebLb",
                         "properties": {
                             "sampleSize": 4,
                             "successfulSamplesRequired": 2,
@@ -124,13 +184,16 @@
                         "properties": {
                             "hostName": "[concat(parameters('namePrefix'), '-globalniweb.azurefd.net')]",
                             "sessionAffinityEnabledState": "Enabled",
-                            "sessionAffinityTtlSeconds": 0
+                            "sessionAffinityTtlSeconds": 0,
+                            "webApplicationFirewallPolicyLink": {
+                                "id": "[resourceId('Microsoft.Network/frontDoorWebApplicationFirewallPolicies', 'myWafPolicy')]"
+                            }
                         }
                     }
                 ],
                 "backendPools": [
                     {
-                        "name": "globalwebs",
+                        "name": "globalWebBackend",
                         "properties": {
                             "backends": [
                                 {
@@ -153,21 +216,21 @@
                                 }
                             ],
                             "loadBalancingSettings": {
-                                "id": "[resourceId('Microsoft.Network/frontdoors/loadBalancingSettings/', 'tomas-globalniweb', 'loadBalancingSettings-1553542398222')]"
+                                "id": "[resourceId('Microsoft.Network/frontdoors/loadBalancingSettings/', concat(parameters('namePrefix'), '-globalniweb'), 'globalWebLb')]"
                             },
                             "healthProbeSettings": {
-                                "id": "[resourceId('Microsoft.Network/frontdoors/healthProbeSettings/', 'tomas-globalniweb', 'healthProbeSettings-1553542398222')]"
+                                "id": "[resourceId('Microsoft.Network/frontdoors/healthProbeSettings/', concat(parameters('namePrefix'), '-globalniweb'), 'globalWebProbe')]"
                             }
                         }
                     }
                 ],
                 "routingRules": [
                     {
-                        "name": "globalWebApp",
+                        "name": "globalWebRule",
                         "properties": {
                             "frontendEndpoints": [
                                 {
-                                    "id": "[resourceId('Microsoft.Network/frontdoors/frontendEndpoints/', 'tomas-globalniweb', concat(parameters('namePrefix'), '-globalniweb-azurefd-net'))]"
+                                    "id": "[resourceId('Microsoft.Network/frontdoors/frontendEndpoints/', concat(parameters('namePrefix'), '-globalniweb'), concat(parameters('namePrefix'), '-globalniweb-azurefd-net'))]"
                                 }
                             ],
                             "acceptedProtocols": [
@@ -188,7 +251,7 @@
                                     "cacheDuration": "P0Y0M0DT0H5M0S"
                                 },
                                 "backendPool": {
-                                    "id": "[resourceId('Microsoft.Network/frontdoors/backendPools/', 'tomas-globalniweb', 'globalwebs')]"
+                                    "id": "[resourceId('Microsoft.Network/frontdoors/backendPools/', concat(parameters('namePrefix'), '-globalniweb'), 'globalWebBackend')]"
                                 }
                             }
                         }

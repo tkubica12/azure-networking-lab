@@ -93,3 +93,17 @@ tcpping 10.0.0.4:22
 
 ## Check Azure Front Door
 Get front door FQDN and test connectivity to WebApp
+
+Try access with SQL injection attempt
+https://networking-demo-globalniweb.azurefd.net/?%3D%27or%201%3D1
+
+Access from jump server multiple times - no rate limit is applied.
+```bash
+curl https://networking-demo-globalniweb.azurefd.net
+```
+
+Access from PC in Czech Republic multiple times - you will be rate limited.
+https://networking-demo-globalniweb.azurefd.net
+
+To test routing rules try put word "super" to URL. You will be redirected to Microsoft main page.
+https://networking-demo-globalniweb.azurefd.net?super
