@@ -107,3 +107,11 @@ https://networking-demo-globalniweb.azurefd.net
 
 To test routing rules try put word "super" to URL. You will be redirected to Microsoft main page.
 https://networking-demo-globalniweb.azurefd.net?super
+
+Check global distribution - measure connection time from your PC, from jump server or other locations.
+
+Via Front Door:
+curl -w "Lookup: %{time_namelookup} \nConnect:%{time_connect} \n" http://networking-demo-globalniweb.azurefd.net --output /dev/null -s
+
+Directly to WebApp in West Europe:
+curl -w "Lookup: %{time_namelookup} \nConnect:%{time_connect} \n" https://networking-demo-globalwebregion1.azurewebsites.net --output /dev/null -s
