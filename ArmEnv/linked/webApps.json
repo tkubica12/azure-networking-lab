@@ -177,16 +177,19 @@
                             "patternsToMatch": [
                                 "/*"
                             ],
-                            "forwardingProtocol": "MatchRequest",
                             "enabledState": "Enabled",
-                            "backendPool": {
-                                "id": "[resourceId('Microsoft.Network/frontdoors/backendPools/', 'tomas-globalniweb', 'globalwebs')]"
-                            },
-                            "cacheConfiguration": {
-                                "queryParameterStripDirective": "StripNone",
-                                "dynamicCompression": "Enabled",
-                                "queryParameters": null,
-                                "cacheDuration": "P0Y0M0DT0H5M0S"
+                            "routeConfiguration": {
+                                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration",
+                                "forwardingProtocol": "MatchRequest",
+                                "cacheConfiguration": {
+                                    "queryParameterStripDirective": "StripNone",
+                                    "dynamicCompression": "Enabled",
+                                    "queryParameters": null,
+                                    "cacheDuration": "P0Y0M0DT0H5M0S"
+                                },
+                                "backendPool": {
+                                    "id": "[resourceId('Microsoft.Network/frontdoors/backendPools/', 'tomas-globalniweb', 'globalwebs')]"
+                                }
                             }
                         }
                     }
