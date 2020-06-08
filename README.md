@@ -35,21 +35,32 @@ There are couple of parameters you can use to tweek your environment such as whe
 Connect to jump server on its public ip.
 
 ## Check you can access app1 VM only via jump server (NSG)
-ssh tomas@10.0.16.4 (should work)
-ssh tomas@10.0.1.4 (go to hub vm) -> ssh tomas@10.0.16.4 (should fail)
+```bash
+ssh tomas@10.0.16.8 # should work
+ssh tomas@10.0.1.4 # go to hub vm
+    ssh tomas@10.0.16.8 # should fail
+```
 
 ## Check app1 talks to outside of VNET via firewall
-ssh tomas@10.0.16.4 -> curl www.microsoft.com vs. curl www.google.com (for Azure Firewall)
-or connect to 3rd party appliance (10.0.3.4) and run tcpdump to check packets going throw
+```bash
+ssh tomas@10.0.16.8
+    curl www.microsoft.com # allowed
+    curl www.google.com # denied by Azure Firewall
 
-curl 10.0.32.4 (check access from app1 to web1)
-It goes over firewall (sudo apt update && sudo apt install traceroute -y && sudo traceroute -T 10.0.32.4
-)
+# or connect to 3rd party appliance (10.0.3.4) and run tcpdump to check packets going throw
+
+curl 10.0.32.4 # check access from app1 to web1
+
+# Traceroute via firewall
+sudo apt update && sudo apt install traceroute -y && sudo traceroute -T 10.0.32.4
+```
 
 ## Test load balancer
+```bash
 curl 10.0.32.4
 curl 10.0.32.5
-curl 10.0.32.100 (try multiple times to show responses from different servers)
+while true; do curl 10.0.32.100; done
+```
 
 ## Check web farm is exposed via reverse proxy
 Obtain reverse proxy public IP (IP of App Gateway or public IP of LB in front of 3rd party VMs)
@@ -57,8 +68,11 @@ Obtain reverse proxy public IP (IP of App Gateway or public IP of LB in front of
 ## Test IaaS to PaaS secure connection via Private Link
 Make sure you are not able to access your SQL server from jump server or your laptop over Internet. SQL server name is generated and it will be different in your case:
 
-ssh tomas@10.0.16.4 (jump to app1) 
-/opt/mssql-tools/bin/sqlcmd -S tomas-dbsrv-bl5uwshgpcmcw.database.windows.net -U tomas -P Azure12345678
+```bash
+ssh tomas@10.0.16.8 # jump to app1
+dig networking-demo-dbsrv-54pvmqd6pbm7c.database.windows.net  # Check private IP is returned
+sqlcmd -S networking-demo-dbsrv-54pvmqd6pbm7c.database.windows.net -U tomas -P Azure12345678
+```
 
 ## Check connection to onpremises resource
 from jump server

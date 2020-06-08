@@ -17,8 +17,10 @@
             "kind": "app",
             "name": "[concat(parameters('namePrefix'), 'serviceplan-region1')]",
             "location": "[variables('location')]",
-            "properties": {},
-            "dependsOn": [],
+            "properties": {
+            },
+            "dependsOn": [
+            ],
             "sku": {
                 "name": "S1",
                 "tier": "Standard",
@@ -33,8 +35,10 @@
             "kind": "app",
             "name": "[concat(parameters('namePrefix'), 'serviceplan-region2')]",
             "location": "[variables('secondaryLocation')]",
-            "properties": {},
-            "dependsOn": [],
+            "properties": {
+            },
+            "dependsOn": [
+            ],
             "sku": {
                 "name": "S1",
                 "tier": "Standard",
@@ -85,9 +89,9 @@
             ]
         },
         {
-            "apiVersion": "2018-08-01",
             "type": "Microsoft.Network/frontdoors",
             "name": "[concat(parameters('namePrefix'), '-globalniweb')]",
+            "apiVersion": "2020-01-01",
             "location": "global",
             "properties": {
                 "friendlyName": "[concat(parameters('namePrefix'), '-globalniweb')]",
@@ -98,7 +102,9 @@
                         "properties": {
                             "path": "/",
                             "protocol": "Https",
-                            "intervalInSeconds": 30
+                            "intervalInSeconds": 30,
+                            "healthProbeMethod": "Head",
+                            "enabledState": "Enabled"
                         }
                     }
                 ],
@@ -157,7 +163,7 @@
                 ],
                 "routingRules": [
                     {
-                        "name": "forward",
+                        "name": "globalWebApp",
                         "properties": {
                             "frontendEndpoints": [
                                 {
@@ -179,7 +185,9 @@
                             },
                             "cacheConfiguration": {
                                 "queryParameterStripDirective": "StripNone",
-                                "dynamicCompression": "Enabled"
+                                "dynamicCompression": "Enabled",
+                                "queryParameters": null,
+                                "cacheDuration": "P0Y0M0DT0H5M0S"
                             }
                         }
                     }

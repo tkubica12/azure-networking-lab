@@ -317,7 +317,9 @@
             "comments": "Deploy app1 server",
             "dependsOn": [
                 "deployNetworking",
-                "deployVnetPeerings"
+                "deployVnetPeerings",
+                "deployRouterNva",
+                "deployAzureFirewall"
             ],
             "apiVersion": "2019-10-01",
             "properties": {
@@ -331,7 +333,7 @@
                         "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('namePrefix'), '-spoke1-net'), 'sub1')]"
                     },
                     "privateIp": {
-                        "value": "10.0.16.4"
+                        "value": "10.0.16.8"
                     },
                     "adminUsername": {
                         "value": "[variables('adminUsername')]"
