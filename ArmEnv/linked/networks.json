@@ -7,13 +7,6 @@
         },
         "fwIp": {
             "type": "string"
-        },
-        "useVpn": {
-            "type": "bool",
-            "metadata": {
-                "description": "Indicates whether VPN GWs are deployed and used from spokes via hub."
-            },
-            "defaultValue": true
         }
     },
     "variables": {
@@ -292,92 +285,6 @@
                         }
                     }
                 ]
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-            "comments": "Configure peering from Spoke1 to Hub",
-            "dependsOn": [
-                "[concat(parameters('namePrefix'), '-hub-net')]",
-                "[concat(parameters('namePrefix'), '-spoke1-net')]",
-                "[concat(parameters('namePrefix'), '-spoke2-net')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke1')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke2')]"
-            ],
-            "name": "[concat(parameters('namePrefix'), '-spoke1-net', '/spoke1-to-hub')]",
-            "apiVersion": "2018-08-01",
-            "properties": {
-                "allowVirtualNetworkAccess": true,
-                "allowForwardedTraffic": true,
-                "allowGatewayTransit": false,
-                "useRemoteGateways": "[parameters('useVpn')]",
-                "remoteVirtualNetwork": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-            "comments": "Configure peering from Spoke2 to Hub",
-            "dependsOn": [
-                "[concat(parameters('namePrefix'), '-hub-net')]",
-                "[concat(parameters('namePrefix'), '-spoke1-net')]",
-                "[concat(parameters('namePrefix'), '-spoke2-net')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke1')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke2')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke1-net'), 'spoke1-to-hub')]"
-            ],
-            "name": "[concat(parameters('namePrefix'), '-spoke2-net', '/spoke2-to-hub')]",
-            "apiVersion": "2018-08-01",
-            "properties": {
-                "allowVirtualNetworkAccess": true,
-                "allowForwardedTraffic": true,
-                "allowGatewayTransit": false,
-                "useRemoteGateways": "[parameters('useVpn')]",
-                "remoteVirtualNetwork": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-            "comments": "Configure peering from Hub to Spoke1",
-            "dependsOn": [
-                "[concat(parameters('namePrefix'), '-hub-net')]",
-                "[concat(parameters('namePrefix'), '-spoke1-net')]",
-                "[concat(parameters('namePrefix'), '-spoke2-net')]"
-            ],
-            "name": "[concat(parameters('namePrefix'), '-hub-net', '/hub-to-spoke1')]",
-            "apiVersion": "2018-08-01",
-            "properties": {
-                "allowVirtualNetworkAccess": true,
-                "allowForwardedTraffic": true,
-                "allowGatewayTransit": "[parameters('useVpn')]",
-                "useRemoteGateways": false,
-                "remoteVirtualNetwork": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke1-net'))]"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-            "comments": "Configure peering from Hub to Spoke2",
-            "dependsOn": [
-                "[concat(parameters('namePrefix'), '-hub-net')]",
-                "[concat(parameters('namePrefix'), '-spoke1-net')]",
-                "[concat(parameters('namePrefix'), '-spoke2-net')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke1')]"
-            ],
-            "name": "[concat(parameters('namePrefix'), '-hub-net', '/hub-to-spoke2')]",
-            "apiVersion": "2018-08-01",
-            "properties": {
-                "allowVirtualNetworkAccess": true,
-                "allowForwardedTraffic": true,
-                "allowGatewayTransit": "[parameters('useVpn')]",
-                "useRemoteGateways": false,
-                "remoteVirtualNetwork": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"
-                }
             }
         },
         {

@@ -44,7 +44,7 @@
         "linkedUrlVnets": "[concat(variables('linkedUrlBase'), 'networks.json')]",
         "linkedUrlVpns": "[concat(variables('linkedUrlBase'), 'vpns.json')]",
         "linkedUrlVpnConnections": "[concat(variables('linkedUrlBase'), 'vpnConnections.json')]",
-        "linkedUrlAllowRemoteGateway": "[concat(variables('linkedUrlBase'), 'allowRemoteGateway.json')]",
+        "linkedUrlVnetPeerings": "[concat(variables('linkedUrlBase'), 'vnetPeerings.json')]",
         "linkedUrlRouter": "[concat(variables('linkedUrlBase'), 'router.json')]",
         "linkedUrlAzureFirewall": "[concat(variables('linkedUrlBase'), 'azureFirewall.json')]",
         "linkedUrlAppGw": "[concat(variables('linkedUrlBase'), 'appGw.json')]",
@@ -64,9 +64,6 @@
             "name": "deployNetworking",
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy networks, NSGs, peerings",
-            "dependsOn": [
-                "deployVpns"
-            ],
             "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
@@ -80,6 +77,28 @@
                     },
                     "fwIp": {
                         "value": "[variables(concat('fwIp', parameters('firewallType')))]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "deployVnetPeerings",
+            "type": "Microsoft.Resources/deployments",
+            "comments": "Deploy VNET peerings",
+            "dependsOn": [
+                "deployVpns",
+                "deployNetworking"
+            ],
+            "apiVersion": "2019-10-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('linkedUrlVnetPeerings')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "namePrefix": {
+                        "value": "[parameters('namePrefix')]"
                     },
                     "useVpn": {
                         "value": "[parameters('deployVpn')]"
@@ -122,6 +141,9 @@
             "type": "Microsoft.Resources/deployments",
             "condition": "[parameters('deployVpn')]",
             "comments": "Deploy VPNs",
+            "dependsOn": [
+                "deployNetworking"
+            ],
             "apiVersion": "2019-10-01",
             "properties": {
                 "mode": "Incremental",
@@ -165,7 +187,8 @@
             "condition": "[equals(parameters('firewallType'), 'Appliance')]",
             "comments": "Deploy router NVA",
             "dependsOn": [
-                "deployNetworking"
+                "deployNetworking",
+                "deployVnetPeerings"
             ],
             "apiVersion": "2019-10-01",
             "properties": {
@@ -226,7 +249,8 @@
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy jump server",
             "dependsOn": [
-                "deployNetworking"
+                "deployNetworking",
+                "deployVnetPeerings"
             ],
             "apiVersion": "2019-10-01",
             "properties": {
@@ -292,7 +316,8 @@
             "type": "Microsoft.Resources/deployments",
             "comments": "Deploy app1 server",
             "dependsOn": [
-                "deployNetworking"
+                "deployNetworking",
+                "deployVnetPeerings"
             ],
             "apiVersion": "2019-10-01",
             "properties": {
@@ -361,7 +386,8 @@
             "dependsOn": [
                 "deployNetworking",
                 "deployRouterNva",
-                "deployAzureFirewall"
+                "deployAzureFirewall",
+                "deployVnetPeerings"
             ],
             "apiVersion": "2019-10-01",
             "properties": {
@@ -401,7 +427,8 @@
             "condition": "[equals(parameters('wafType'), 'Appliance')]",
             "comments": "Deploy reverse proxies behind LB",
             "dependsOn": [
-                "deployNetworking"
+                "deployNetworking",
+                "deployVnetPeerings"
             ],
             "apiVersion": "2019-10-01",
             "properties": {

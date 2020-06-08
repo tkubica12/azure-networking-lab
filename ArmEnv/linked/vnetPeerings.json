@@ -4,26 +4,34 @@
     "parameters": {
         "namePrefix": {
             "type": "string"
+        },
+        "useVpn": {
+            "type": "bool",
+            "metadata": {
+                "description": "Indicates whether VPN GWs are deployed and used from spokes via hub."
+            },
+            "defaultValue": true
         }
     },
     "variables": {
-        "location": "[resourceGroup().location]"
+        "location": "[resourceGroup().location]",
+        "privateDnsZone": "[concat(parameters('namePrefix'), '.cz')]"
     },
     "resources": [
         {
             "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
             "comments": "Configure peering from Spoke1 to Hub",
-            "name": "[concat(parameters('namePrefix'), '-spoke1-net', '/spoke1-to-hub')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke1')]",
                 "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke2')]"
             ],
+            "name": "[concat(parameters('namePrefix'), '-spoke1-net', '/spoke1-to-hub')]",
             "apiVersion": "2018-08-01",
             "properties": {
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
                 "allowGatewayTransit": false,
-                "useRemoteGateways": true,
+                "useRemoteGateways": "[parameters('useVpn')]",
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
                 }
@@ -33,9 +41,9 @@
             "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
             "comments": "Configure peering from Spoke2 to Hub",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke1-net'), 'spoke1-to-hub')]",
                 "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke1')]",
-                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke2')]"
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-hub-net'), 'hub-to-spoke2')]",
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', concat(parameters('namePrefix'), '-spoke1-net'), 'spoke1-to-hub')]"
             ],
             "name": "[concat(parameters('namePrefix'), '-spoke2-net', '/spoke2-to-hub')]",
             "apiVersion": "2018-08-01",
@@ -43,7 +51,7 @@
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
                 "allowGatewayTransit": false,
-                "useRemoteGateways": true,
+                "useRemoteGateways": "[parameters('useVpn')]",
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-hub-net'))]"
                 }
@@ -57,7 +65,7 @@
             "properties": {
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
-                "allowGatewayTransit": true,
+                "allowGatewayTransit": "[parameters('useVpn')]",
                 "useRemoteGateways": false,
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke1-net'))]"
@@ -75,7 +83,7 @@
             "properties": {
                 "allowVirtualNetworkAccess": true,
                 "allowForwardedTraffic": true,
-                "allowGatewayTransit": true,
+                "allowGatewayTransit": "[parameters('useVpn')]",
                 "useRemoteGateways": false,
                 "remoteVirtualNetwork": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('namePrefix'), '-spoke2-net'))]"
@@ -83,5 +91,6 @@
             }
         }
     ],
-    "outputs": {}
+    "outputs": {
+    }
 }
