@@ -93,7 +93,8 @@
             "name": "myWafPolicy",
             "apiVersion": "2019-10-01",
             "location": "[variables('location')]",
-            "tags": {},
+            "tags": {
+            },
             "properties": {
                 "policySettings": {
                     "enabledState": "Enabled",
@@ -120,7 +121,8 @@
                                     "matchValue": [
                                         "CZ"
                                     ],
-                                    "transforms": []
+                                    "transforms": [
+                                    ]
                                 }
                             ],
                             "action": "Block"
@@ -132,17 +134,65 @@
                         {
                             "ruleSetType": "DefaultRuleSet",
                             "ruleSetVersion": "1.0",
-                            "ruleGroupOverrides": [],
-                            "exclusions": []
+                            "ruleGroupOverrides": [
+                            ],
+                            "exclusions": [
+                            ]
                         },
                         {
                             "ruleSetType": "Microsoft_BotManagerRuleSet",
                             "ruleSetVersion": "1.0",
-                            "ruleGroupOverrides": [],
-                            "exclusions": []
+                            "ruleGroupOverrides": [
+                            ],
+                            "exclusions": [
+                            ]
                         }
                     ]
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Network/frontdoors/rulesengines",
+            "apiVersion": "2020-05-01",
+            "name": "[concat(parameters('namePrefix'), '-globalniweb/redirectWhenUrlContains')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/frontdoors', concat(parameters('namePrefix'), '-globalniweb'))]"
+            ],
+            "properties": {
+                "resourceState": "Enabled",
+                "rules": [
+                    {
+                        "priority": 0,
+                        "name": "redirectWhenUrlContainsSuper",
+                        "matchProcessingBehavior": "Stop",
+                        "action": {
+                            "requestHeaderActions": [
+                            ],
+                            "responseHeaderActions": [
+                            ],
+                            "routeConfigurationOverride": {
+                                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorRedirectConfiguration",
+                                "customHost": "www.microsoft.com",
+                                "customPath": "/",
+                                "redirectProtocol": "HttpsOnly",
+                                "redirectType": "Found"
+                            }
+                        },
+                        "matchConditions": [
+                            {
+                                "rulesEngineMatchValue": [
+                                    "super"
+                                ],
+                                "rulesEngineMatchVariable": "RequestUri",
+                                "rulesEngineOperator": "Contains",
+                                "transforms": [
+                                    "Lowercase"
+                                ],
+                                "negateCondition": false
+                            }
+                        ]
+                    }
+                ]
             }
         },
         {
@@ -253,6 +303,9 @@
                                 "backendPool": {
                                     "id": "[resourceId('Microsoft.Network/frontdoors/backendPools/', concat(parameters('namePrefix'), '-globalniweb'), 'globalWebBackend')]"
                                 }
+                            },
+                             "rulesEngine": {
+                                "id": "[resourceId('Microsoft.Network/frontdoors/rulesengines', concat(parameters('namePrefix'), '-globalniweb'), 'redirectWhenUrlContains')]"
                             }
                         }
                     }
