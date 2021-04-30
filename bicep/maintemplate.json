@@ -1,0 +1,2085 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.3.255.40792",
+      "templateHash": "2856919026624583164"
+    }
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "networks",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "fwIp": {
+            "value": "10.0.3.196"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "3590299018597158573"
+            }
+          },
+          "parameters": {
+            "fwIp": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-11-01",
+              "name": "hub-net",
+              "location": "[variables('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.0.0.0/20"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "jumpserver-sub",
+                    "properties": {
+                      "addressPrefix": "10.0.0.0/24"
+                    }
+                  },
+                  {
+                    "name": "sharedservices-sub",
+                    "properties": {
+                      "addressPrefix": "10.0.1.0/24"
+                    }
+                  },
+                  {
+                    "name": "GatewaySubnet",
+                    "properties": {
+                      "addressPrefix": "10.0.2.0/24"
+                    }
+                  },
+                  {
+                    "name": "ngfw-int",
+                    "properties": {
+                      "addressPrefix": "10.0.3.0/26"
+                    }
+                  },
+                  {
+                    "name": "ngfw-ext",
+                    "properties": {
+                      "addressPrefix": "10.0.3.64/26"
+                    }
+                  },
+                  {
+                    "name": "rp",
+                    "properties": {
+                      "addressPrefix": "10.0.3.128/26",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'hub-rp-fw')]"
+                      },
+                      "routeTable": {
+                        "id": "[resourceId('Microsoft.Network/routeTables', 'routesFromRp')]"
+                      }
+                    }
+                  },
+                  {
+                    "name": "AzureFirewallSubnet",
+                    "properties": {
+                      "addressPrefix": "10.0.3.192/26"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'hub-rp-fw')]",
+                "[resourceId('Microsoft.Network/routeTables', 'routesFromRp')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-11-01",
+              "name": "spoke1-net",
+              "location": "[variables('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.0.16.0/20"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "sub1",
+                    "properties": {
+                      "addressPrefix": "10.0.16.0/24",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke1-sub1-nsg')]"
+                      },
+                      "routeTable": {
+                        "id": "[resourceId('Microsoft.Network/routeTables', 'defaultRoutes')]"
+                      },
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "sub2",
+                    "properties": {
+                      "addressPrefix": "10.0.17.0/24"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', 'defaultRoutes')]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke1-sub1-nsg')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-11-01",
+              "name": "spoke2-net",
+              "location": "[variables('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.0.32.0/20"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "sub1",
+                    "properties": {
+                      "addressPrefix": "10.0.32.0/24",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke2-sub1-nsg')]"
+                      },
+                      "routeTable": {
+                        "id": "[resourceId('Microsoft.Network/routeTables', 'defaultRoutes')]"
+                      }
+                    }
+                  },
+                  {
+                    "name": "paas-integration-sub",
+                    "properties": {
+                      "addressPrefix": "10.0.33.0/24",
+                      "delegations": [
+                        {
+                          "name": "delegation",
+                          "properties": {
+                            "serviceName": "Microsoft.Web/serverfarms"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', 'defaultRoutes')]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke2-sub1-nsg')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2017-06-01",
+              "name": "spoke2-sub1-nsg",
+              "location": "[variables('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "allowSSHFromJump",
+                    "properties": {
+                      "description": "Allow SSH traffic from jump server",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "10.0.0.4/32",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "denySSH",
+                    "properties": {
+                      "description": "Deny SSH traffic",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Deny",
+                      "priority": 105,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "allowWeb",
+                    "properties": {
+                      "description": "Allow web traffic",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": [
+                        "80",
+                        "443"
+                      ],
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2017-06-01",
+              "name": "spoke1-sub1-nsg",
+              "location": "[variables('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "allowSSHFromJump",
+                    "properties": {
+                      "description": "Allow SSH traffic from jump server",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "10.0.0.4/32",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "denySSH",
+                    "properties": {
+                      "description": "Deny SSH traffic",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Deny",
+                      "priority": 105,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "allowWeb",
+                    "properties": {
+                      "description": "Allow web traffic",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": [
+                        "80",
+                        "443"
+                      ],
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "allowPaasSql",
+                    "properties": {
+                      "description": "Allow PaaS SQL traffic",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "1433",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "Sql.WestEurope",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Outbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2017-06-01",
+              "name": "hub-rp-fw",
+              "location": "[variables('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "allowSSHFromJump",
+                    "properties": {
+                      "description": "Allow SSH traffic from jump server",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "10.0.0.4/32",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "denySSH",
+                    "properties": {
+                      "description": "Deny SSH traffic",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "22",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Deny",
+                      "priority": 105,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "allowWeb",
+                    "properties": {
+                      "description": "Allow web ports on reverse proxy",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": [
+                        "8080-8090"
+                      ],
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 110,
+                      "direction": "Inbound"
+                    }
+                  },
+                  {
+                    "name": "allowAppGwManagement",
+                    "properties": {
+                      "description": "Allow web ports on reverse proxy",
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": [
+                        "65200-65535"
+                      ],
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 120,
+                      "direction": "Inbound"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/routeTables",
+              "apiVersion": "2018-07-01",
+              "name": "defaultRoutes",
+              "location": "[variables('location')]",
+              "properties": {
+                "routes": [
+                  {
+                    "name": "defaultToNva",
+                    "properties": {
+                      "addressPrefix": "0.0.0.0/0",
+                      "nextHopType": "VirtualAppliance",
+                      "nextHopIpAddress": "[parameters('fwIp')]"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/routeTables",
+              "apiVersion": "2018-07-01",
+              "name": "routesFromRp",
+              "location": "[variables('location')]",
+              "properties": {
+                "routes": [
+                  {
+                    "name": "defaultToNva",
+                    "properties": {
+                      "addressPrefix": "10.0.0.0/8",
+                      "nextHopType": "VirtualAppliance",
+                      "nextHopIpAddress": "[parameters('fwIp')]"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/loadBalancers",
+              "apiVersion": "2020-11-01",
+              "name": "web-lb",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "frontendIPConfigurations": [
+                  {
+                    "name": "loadBalancerFrontEnd",
+                    "properties": {
+                      "privateIPAddress": "10.0.32.100",
+                      "privateIPAllocationMethod": "Static",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/sub1', resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net'))]"
+                      }
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "web-pool"
+                  }
+                ],
+                "loadBalancingRules": [
+                  {
+                    "name": "myHttpRule",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[format('{0}/frontendIpConfigurations/loadBalancerFrontEnd', resourceId('Microsoft.Network/loadBalancers', 'web-lb'))]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[format('{0}/backendAddressPools/web-pool', resourceId('Microsoft.Network/loadBalancers', 'web-lb'))]"
+                      },
+                      "probe": {
+                        "id": "[format('{0}/probes/lbprobe', resourceId('Microsoft.Network/loadBalancers', 'web-lb'))]"
+                      },
+                      "protocol": "Tcp",
+                      "frontendPort": 80,
+                      "backendPort": 80,
+                      "idleTimeoutInMinutes": 15
+                    }
+                  }
+                ],
+                "probes": [
+                  {
+                    "name": "lbprobe",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "port": 80,
+                      "intervalInSeconds": 15,
+                      "numberOfProbes": 2
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "net.demo",
+              "location": "global"
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "privatelink.database.windows.net",
+              "location": "global"
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/hub-net', 'net.demo')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+                },
+                "registrationEnabled": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'net.demo')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/hub-net', 'privatelink.database.windows.net')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/spoke1-net', 'net.demo')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+                },
+                "registrationEnabled": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'net.demo')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/spoke1-net', 'privatelink.database.windows.net')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/spoke2-net', 'net.demo')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+                },
+                "registrationEnabled": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'net.demo')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/spoke2-net', 'privatelink.database.windows.net')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+              ]
+            }
+          ],
+          "outputs": {
+            "hubNetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+            },
+            "spoke1NetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+            },
+            "spoke2NetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+            },
+            "hubNetName": {
+              "type": "string",
+              "value": "hub-net"
+            },
+            "spoke1NetName": {
+              "type": "string",
+              "value": "spoke1-net"
+            },
+            "spoke2NetName": {
+              "type": "string",
+              "value": "spoke2-net"
+            },
+            "webLbPoolId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/loadBalancers', 'web-lb')).backendAddressPools[0].id]"
+            },
+            "spoke1Sub1NsgId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke1-sub1-nsg')]"
+            },
+            "spoke2Sub1NsgId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke2-sub1-nsg')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "vpns",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "hubNetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "16852350230732992304"
+            }
+          },
+          "parameters": {
+            "hubNetId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2015-06-15",
+              "name": "onprem-net",
+              "location": "[variables('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.254.0.0/16"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "server-sub",
+                    "properties": {
+                      "addressPrefix": "10.254.0.0/24"
+                    }
+                  },
+                  {
+                    "name": "GatewaySubnet",
+                    "properties": {
+                      "addressPrefix": "10.254.1.0/24"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2018-08-01",
+              "name": "onprem-vpn-ip",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "zones": [],
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2018-08-01",
+              "name": "vpn-ip",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "zones": [],
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworkGateways",
+              "apiVersion": "2018-12-01",
+              "name": "onprem-vpn",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/GatewaySubnet', resourceId('Microsoft.Network/virtualNetworks', 'onprem-net'))]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'onprem-vpn-ip')]"
+                      }
+                    },
+                    "name": "vnetGatewayConfig"
+                  }
+                ],
+                "sku": {
+                  "name": "VpnGw1AZ",
+                  "tier": "VpnGw1AZ"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": "false"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'onprem-net')]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'onprem-vpn-ip')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworkGateways",
+              "apiVersion": "2018-12-01",
+              "name": "vpn",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/GatewaySubnet', parameters('hubNetId'))]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'vpn-ip')]"
+                      }
+                    },
+                    "name": "vnetGatewayConfig"
+                  }
+                ],
+                "sku": {
+                  "name": "VpnGw1AZ",
+                  "tier": "VpnGw1AZ"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": "false"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'vpn-ip')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/localNetworkGateways",
+              "apiVersion": "2018-12-01",
+              "name": "onprem-gw",
+              "location": "[variables('location')]",
+              "properties": {
+                "localNetworkAddressSpace": {
+                  "addressPrefixes": [
+                    "10.254.0.0/16"
+                  ]
+                },
+                "gatewayIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', 'onprem-vpn-ip')).ipAddress]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'onprem-vpn-ip')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/localNetworkGateways",
+              "apiVersion": "2018-12-01",
+              "name": "hub-gw",
+              "location": "[variables('location')]",
+              "properties": {
+                "localNetworkAddressSpace": {
+                  "addressPrefixes": [
+                    "10.0.0.0/20"
+                  ]
+                },
+                "gatewayIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', 'vpn-ip')).ipAddress]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'vpn-ip')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/connections",
+              "apiVersion": "2018-12-01",
+              "name": "vpn-hub-to-onprem",
+              "location": "[variables('location')]",
+              "properties": {
+                "virtualNetworkGateway1": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', 'vpn')]"
+                },
+                "localNetworkGateway2": {
+                  "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-gw')]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 10,
+                "sharedKey": "Azure12345678"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-gw')]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', 'vpn')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/connections",
+              "apiVersion": "2018-12-01",
+              "name": "vpn-onprem-to-hub",
+              "location": "[variables('location')]",
+              "properties": {
+                "virtualNetworkGateway1": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', 'onprem-vpn')]"
+                },
+                "localNetworkGateway2": {
+                  "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'hub-gw')]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 10,
+                "sharedKey": "Azure12345678"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/localNetworkGateways', 'hub-gw')]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', 'onprem-vpn')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "peerSpoke1",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "hubId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value]"
+          },
+          "hubName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetName.value]"
+          },
+          "spokeId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke1NetId.value]"
+          },
+          "spokeName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke1NetName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "16168380182404330954"
+            }
+          },
+          "parameters": {
+            "spokeName": {
+              "type": "string"
+            },
+            "spokeId": {
+              "type": "string"
+            },
+            "hubName": {
+              "type": "string"
+            },
+            "hubId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/peer{1}-{2}', parameters('hubName'), parameters('hubName'), parameters('spokeName'))]",
+              "properties": {
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": true,
+                "allowVirtualNetworkAccess": true,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('spokeId')]"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/peer{1}-{2}', parameters('spokeName'), parameters('spokeName'), parameters('hubName'))]",
+              "properties": {
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "allowVirtualNetworkAccess": true,
+                "useRemoteGateways": true,
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('hubId')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', split(format('{0}/peer{1}-{2}', parameters('hubName'), parameters('hubName'), parameters('spokeName')), '/')[0], split(format('{0}/peer{1}-{2}', parameters('hubName'), parameters('hubName'), parameters('spokeName')), '/')[1])]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vpns')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "peerSpoke2",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "hubId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value]"
+          },
+          "hubName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetName.value]"
+          },
+          "spokeId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetId.value]"
+          },
+          "spokeName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "16168380182404330954"
+            }
+          },
+          "parameters": {
+            "spokeName": {
+              "type": "string"
+            },
+            "spokeId": {
+              "type": "string"
+            },
+            "hubName": {
+              "type": "string"
+            },
+            "hubId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/peer{1}-{2}', parameters('hubName'), parameters('hubName'), parameters('spokeName'))]",
+              "properties": {
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": true,
+                "allowVirtualNetworkAccess": true,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('spokeId')]"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/peer{1}-{2}', parameters('spokeName'), parameters('spokeName'), parameters('hubName'))]",
+              "properties": {
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "allowVirtualNetworkAccess": true,
+                "useRemoteGateways": true,
+                "remoteVirtualNetwork": {
+                  "id": "[parameters('hubId')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', split(format('{0}/peer{1}-{2}', parameters('hubName'), parameters('hubName'), parameters('spokeName')), '/')[0], split(format('{0}/peer{1}-{2}', parameters('hubName'), parameters('hubName'), parameters('spokeName')), '/')[1])]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]",
+        "[resourceId('Microsoft.Resources/deployments', 'vpns')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "firewall",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "fwSubnetId": {
+            "value": "[format('{0}/subnets/AzureFirewallSubnet', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+          },
+          "logWorkspaceResourceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2019-10-01').outputs.logWorkspaceResourceId.value]"
+          },
+          "logWorkspaceName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2019-10-01').outputs.logWorkspaceName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "11710839209497686109"
+            }
+          },
+          "parameters": {
+            "fwSubnetId": {
+              "type": "string"
+            },
+            "logWorkspaceResourceId": {
+              "type": "string"
+            },
+            "logWorkspaceName": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-11-01",
+              "name": "fw-ip",
+              "location": "[variables('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "zones": [
+                "1",
+                "2",
+                "3"
+              ],
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies",
+              "apiVersion": "2020-07-01",
+              "name": "fw-base-policy",
+              "location": "[variables('location')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]": {}
+                }
+              },
+              "properties": {
+                "sku": {
+                  "tier": "Premium"
+                },
+                "intrusionDetection": {
+                  "mode": "Deny"
+                },
+                "threatIntelMode": "Deny",
+                "transportSecurity": {
+                  "certificateAuthority": {
+                    "name": "cert",
+                    "keyVaultSecretId": "[reference(resourceId('Microsoft.Resources/deploymentScripts', 'scriptCreateCertificate')).outputs.result[0]]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]",
+                "[resourceId('Microsoft.Resources/deploymentScripts', 'scriptCreateCertificate')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies",
+              "apiVersion": "2020-07-01",
+              "name": "fw-policy",
+              "location": "[variables('location')]",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]": {}
+                }
+              },
+              "properties": {
+                "basePolicy": {
+                  "id": "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]"
+                },
+                "sku": {
+                  "tier": "Premium"
+                },
+                "intrusionDetection": {
+                  "mode": "Deny"
+                },
+                "threatIntelMode": "Deny",
+                "transportSecurity": {
+                  "certificateAuthority": {
+                    "name": "cert",
+                    "keyVaultSecretId": "[reference(resourceId('Microsoft.Resources/deploymentScripts', 'scriptCreateCertificate')).outputs.result[0]]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]",
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]",
+                "[resourceId('Microsoft.Resources/deploymentScripts', 'scriptCreateCertificate')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-base-policy')]",
+              "properties": {
+                "priority": 300,
+                "ruleCollections": [
+                  {
+                    "name": "allowMicrosoft",
+                    "priority": 100,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "rules": [
+                      {
+                        "ruleType": "ApplicationRule",
+                        "name": "MicrosoftUpdate",
+                        "protocols": [
+                          {
+                            "protocolType": "Http",
+                            "port": 80
+                          },
+                          {
+                            "protocolType": "Https",
+                            "port": 443
+                          }
+                        ],
+                        "sourceAddresses": [
+                          "*"
+                        ],
+                        "fqdnTags": [
+                          "WindowsUpdate"
+                        ],
+                        "terminateTLS": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]",
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[0], split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[1])]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-policy')]",
+              "properties": {
+                "priority": 300,
+                "ruleCollections": [
+                  {
+                    "name": "allowMicrosoft",
+                    "priority": 100,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "rules": [
+                      {
+                        "ruleType": "ApplicationRule",
+                        "name": "microsoft",
+                        "protocols": [
+                          {
+                            "protocolType": "Http",
+                            "port": 80
+                          },
+                          {
+                            "protocolType": "Https",
+                            "port": 443
+                          }
+                        ],
+                        "sourceAddresses": [
+                          "*"
+                        ],
+                        "targetFqdns": [
+                          "*microsoft.com"
+                        ],
+                        "terminateTLS": false
+                      }
+                    ]
+                  },
+                  {
+                    "name": "allowUbuntu",
+                    "priority": 110,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "rules": [
+                      {
+                        "ruleType": "ApplicationRule",
+                        "name": "ubuntu",
+                        "protocols": [
+                          {
+                            "protocolType": "Http",
+                            "port": 80
+                          },
+                          {
+                            "protocolType": "Https",
+                            "port": 443
+                          }
+                        ],
+                        "sourceAddresses": [
+                          "*"
+                        ],
+                        "targetFqdns": [
+                          "*ubuntu.com"
+                        ],
+                        "terminateTLS": false
+                      }
+                    ]
+                  },
+                  {
+                    "name": "allowGithub",
+                    "priority": 120,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "rules": [
+                      {
+                        "ruleType": "ApplicationRule",
+                        "name": "github",
+                        "protocols": [
+                          {
+                            "protocolType": "Http",
+                            "port": 80
+                          },
+                          {
+                            "protocolType": "Https",
+                            "port": 443
+                          }
+                        ],
+                        "sourceAddresses": [
+                          "*"
+                        ],
+                        "targetFqdns": [
+                          "*github.com"
+                        ],
+                        "terminateTLS": false
+                      }
+                    ]
+                  },
+                  {
+                    "name": "allowMaliciousTest",
+                    "priority": 130,
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "rules": [
+                      {
+                        "ruleType": "ApplicationRule",
+                        "name": "clicnews.com",
+                        "protocols": [
+                          {
+                            "protocolType": "Http",
+                            "port": 80
+                          },
+                          {
+                            "protocolType": "Https",
+                            "port": 443
+                          }
+                        ],
+                        "sourceAddresses": [
+                          "*"
+                        ],
+                        "targetFqdns": [
+                          "clicnews.com"
+                        ],
+                        "terminateTLS": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-policy')]",
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[0], split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[1])]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy')]",
+              "properties": {
+                "priority": 200,
+                "ruleCollections": [
+                  {
+                    "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                    "action": {
+                      "type": "Allow"
+                    },
+                    "priority": 200,
+                    "rules": [
+                      {
+                        "name": "allowWeb",
+                        "ruleType": "NetworkRule",
+                        "ipProtocols": [
+                          "TCP"
+                        ],
+                        "sourceAddresses": [
+                          "10.0.0.0/8"
+                        ],
+                        "destinationAddresses": [
+                          "10.0.0.0/8"
+                        ],
+                        "destinationPorts": [
+                          "80"
+                        ]
+                      },
+                      {
+                        "name": "allowSsh",
+                        "ruleType": "NetworkRule",
+                        "ipProtocols": [
+                          "TCP"
+                        ],
+                        "sourceAddresses": [
+                          "10.0.0.0/8"
+                        ],
+                        "destinationAddresses": [
+                          "10.0.0.0/8"
+                        ],
+                        "destinationPorts": [
+                          "22"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-policy')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/azureFirewalls",
+              "apiVersion": "2020-11-01",
+              "name": "fw",
+              "location": "[variables('location')]",
+              "zones": [
+                "1",
+                "2",
+                "3"
+              ],
+              "properties": {
+                "sku": {
+                  "tier": "Premium"
+                },
+                "firewallPolicy": {
+                  "id": "[resourceId('Microsoft.Network/firewallPolicies', 'fw-policy')]"
+                },
+                "ipConfigurations": [
+                  {
+                    "name": "fw-ip",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('fwSubnetId')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'fw-ip')]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'fw-ip')]",
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-policy')]"
+              ]
+            },
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2018-11-30",
+              "name": "fwIdentity",
+              "location": "[variables('location')]"
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2019-09-01",
+              "name": "[format('kv{0}', uniqueString(resourceGroup().id))]",
+              "location": "[variables('location')]",
+              "properties": {
+                "sku": {
+                  "name": "standard",
+                  "family": "A"
+                },
+                "tenantId": "[subscription().tenantId]",
+                "accessPolicies": [
+                  {
+                    "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')).principalId]",
+                    "tenantId": "[subscription().tenantId]",
+                    "permissions": {
+                      "certificates": [
+                        "all"
+                      ],
+                      "secrets": [
+                        "all"
+                      ],
+                      "keys": [
+                        "all"
+                      ]
+                    }
+                  }
+                ],
+                "enableRbacAuthorization": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', format('kv{0}', uniqueString(resourceGroup().id)))]",
+              "name": "[guid('fwKeyVaultRole', resourceGroup().id)]",
+              "properties": {
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')).principalId]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]",
+                "[resourceId('Microsoft.KeyVault/vaults', format('kv{0}', uniqueString(resourceGroup().id)))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "name": "[guid('fwContributorRole', resourceGroup().id)]",
+              "properties": {
+                "principalType": "ServicePrincipal",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')).principalId]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2020-10-01",
+              "name": "scriptCreateCertificate",
+              "location": "[variables('location')]",
+              "kind": "AzureCLI",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]": {}
+                }
+              },
+              "properties": {
+                "azCliVersion": "2.20.0",
+                "cleanupPreference": "OnExpiration",
+                "scriptContent": "      wget https://github.com/tkubica12/azure-networking-lab/blob/master/bicep/inspectionCert/interCA.pfx?raw=true -O interCA.pfx\r\n      az keyvault certificate import -n cert --vault-name $kv -f interCA.pfx --password Azure12345678\r\n      echo {\\\"result\\\":[\\\"$(az keyvault certificate show -n cert --vault-name $kv --query sid -o tsv)\\\"]} > $AZ_SCRIPTS_OUTPUT_PATH\r\n    ",
+                "environmentVariables": [
+                  {
+                    "name": "kv",
+                    "value": "[format('kv{0}', uniqueString(resourceGroup().id))]"
+                  }
+                ],
+                "retentionInterval": "P1D"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]",
+                "[resourceId('Microsoft.KeyVault/vaults', format('kv{0}', uniqueString(resourceGroup().id)))]"
+              ]
+            },
+            {
+              "type": "microsoft.insights/diagnosticSettings",
+              "apiVersion": "2017-05-01-preview",
+              "scope": "[format('Microsoft.Network/azureFirewalls/{0}', 'fw')]",
+              "name": "logs",
+              "properties": {
+                "workspaceId": "[parameters('logWorkspaceResourceId')]",
+                "logs": [
+                  {
+                    "category": "AzureFirewallApplicationRule",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 0,
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "category": "AzureFirewallNetworkRule",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 0,
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "category": "AzureFirewallDnsProxy",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 0,
+                      "enabled": false
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/azureFirewalls', 'fw')]"
+              ]
+            }
+          ],
+          "outputs": {
+            "keyVaultName": {
+              "type": "string",
+              "value": "[format('kv{0}', uniqueString(resourceGroup().id))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'monitoring')]",
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "monitoring",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "spoke1Sub1NsgId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke1Sub1NsgId.value]"
+          },
+          "spoke2Sub1NsgId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2Sub1NsgId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "12031862214706226557"
+            }
+          },
+          "parameters": {
+            "spoke1Sub1NsgId": {
+              "type": "string"
+            },
+            "spoke2Sub1NsgId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2020-10-01",
+              "name": "[uniqueString(resourceGroup().id)]",
+              "location": "[variables('location')]",
+              "properties": {
+                "sku": {
+                  "name": "PerGB2018"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.OperationsManagement/solutions",
+              "apiVersion": "2015-11-01-preview",
+              "name": "[format('SecurityInsights({0})', uniqueString(resourceGroup().id))]",
+              "location": "[variables('location')]",
+              "plan": {
+                "name": "[format('SecurityInsights({0})', uniqueString(resourceGroup().id))]",
+                "product": "OMSGallery/SecurityInsights",
+                "publisher": "Microsoft",
+                "promotionCode": ""
+              },
+              "properties": {
+                "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkWatchers",
+              "apiVersion": "2020-11-01",
+              "name": "[format('networkWatcher-{0}', variables('location'))]",
+              "location": "[variables('location')]"
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2021-02-01",
+              "name": "[format('flow{0}', uniqueString(resourceGroup().id))]",
+              "location": "[variables('location')]",
+              "kind": "StorageV2",
+              "sku": {
+                "name": "Standard_LRS"
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkWatchers/flowLogs",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/{1}', format('networkWatcher-{0}', variables('location')), 'flowLogSpoke1Sub1Nsg')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "targetResourceId": "[parameters('spoke1Sub1NsgId')]",
+                "storageId": "[resourceId('Microsoft.Storage/storageAccounts', format('flow{0}', uniqueString(resourceGroup().id)))]",
+                "enabled": true,
+                "flowAnalyticsConfiguration": {
+                  "networkWatcherFlowAnalyticsConfiguration": {
+                    "trafficAnalyticsInterval": 10,
+                    "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]",
+                    "enabled": true
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]",
+                "[resourceId('Microsoft.Network/networkWatchers', format('networkWatcher-{0}', variables('location')))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', format('flow{0}', uniqueString(resourceGroup().id)))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkWatchers/flowLogs",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/{1}', format('networkWatcher-{0}', variables('location')), 'flowLogSpoke2Sub1Nsg')]",
+              "location": "[variables('location')]",
+              "properties": {
+                "targetResourceId": "[parameters('spoke2Sub1NsgId')]",
+                "storageId": "[resourceId('Microsoft.Storage/storageAccounts', format('flow{0}', uniqueString(resourceGroup().id)))]",
+                "enabled": true,
+                "flowAnalyticsConfiguration": {
+                  "networkWatcherFlowAnalyticsConfiguration": {
+                    "trafficAnalyticsInterval": 10,
+                    "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]",
+                    "enabled": true
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]",
+                "[resourceId('Microsoft.Network/networkWatchers', format('networkWatcher-{0}', variables('location')))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', format('flow{0}', uniqueString(resourceGroup().id)))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "logWorkspaceResourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))]"
+            },
+            "logWorkspaceId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', uniqueString(resourceGroup().id))).customerId]"
+            },
+            "logWorkspaceName": {
+              "type": "string",
+              "value": "[uniqueString(resourceGroup().id)]"
+            },
+            "networkWatcherName": {
+              "type": "string",
+              "value": "[format('networkWatcher-{0}', variables('location'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "vms",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "jumpSubnetId": {
+            "value": "[format('{0}/subnets/jumpserver-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+          },
+          "hubSubnetId": {
+            "value": "[format('{0}/subnets/sharedservices-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+          },
+          "webSubnetId": {
+            "value": "[format('{0}/subnets/sub1', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetId.value)]"
+          },
+          "webLbPoolId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.webLbPoolId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "12952560034850503365"
+            }
+          },
+          "parameters": {
+            "jumpSubnetId": {
+              "type": "string"
+            },
+            "hubSubnetId": {
+              "type": "string"
+            },
+            "webSubnetId": {
+              "type": "string"
+            },
+            "webLbPoolId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]",
+            "size": "Standard_B1ms",
+            "username": "tomas",
+            "password": "Azure12345678",
+            "webscript": "Y2F0ID4gL2V0Yy9zeXN0ZW1kL3N5c3RlbS9teXdlYi5zZXJ2aWNlIDw8IEVPRgpbVW5pdF0KRGVzY3JpcHRpb249TXlXZWIKCltTZXJ2aWNlXQpFeGVjU3RhcnQ9L215d2ViLnNoCgpbSW5zdGFsbF0KV2FudGVkQnk9bXVsdGktdXNlci50YXJnZXQKRU9GCgpjYXQgPiAvbXl3ZWIuc2ggPDwgRU9GCiMhL2Jpbi9iYXNoCndoaWxlIHRydWUKZG8gZWNobyAtZSAiSFRUUC8xLjEgMjAwIE9LXG5cbiBNeVdFQjogJChkYXRlKSIgfCBuYyAtbCAtdyAxIDgwCmRvbmUKRU9GCgpjaG1vZCAreCAvbXl3ZWIuc2gKc3lzdGVtY3RsIGVuYWJsZSBteXdlYgpzeXN0ZW1jdGwgc3RhcnQgbXl3ZWIK"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-11-01",
+              "name": "jumpserver-ip",
+              "location": "[variables('location')]",
+              "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-11-01",
+              "name": "jumpserver-nic",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "10.0.0.4",
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'jumpserver-ip')]"
+                      },
+                      "subnet": {
+                        "id": "[parameters('jumpSubnetId')]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'jumpserver-ip')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2020-12-01",
+              "name": "jumpserver-vm",
+              "location": "[variables('location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[variables('size')]"
+                },
+                "osProfile": {
+                  "computerName": "jumpserver-vm",
+                  "adminUsername": "[variables('username')]",
+                  "adminPassword": "[variables('password')]",
+                  "customData": "[variables('webscript')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "18.04-LTS",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', 'jumpserver-nic')]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'jumpserver-nic')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-11-01",
+              "name": "hub-vm-nic",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "10.0.1.4",
+                      "subnet": {
+                        "id": "[parameters('hubSubnetId')]"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2020-12-01",
+              "name": "hub-vm",
+              "location": "[variables('location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[variables('size')]"
+                },
+                "osProfile": {
+                  "computerName": "hub-vm",
+                  "adminUsername": "[variables('username')]",
+                  "adminPassword": "[variables('password')]",
+                  "customData": "[variables('webscript')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "18.04-LTS",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', 'hub-vm-nic')]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'hub-vm-nic')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-11-01",
+              "name": "web1-vm-nic",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "10.0.32.4",
+                      "subnet": {
+                        "id": "[parameters('webSubnetId')]"
+                      },
+                      "loadBalancerBackendAddressPools": [
+                        {
+                          "id": "[parameters('webLbPoolId')]"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2020-12-01",
+              "name": "web1-vm",
+              "location": "[variables('location')]",
+              "zones": [
+                "1"
+              ],
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[variables('size')]"
+                },
+                "osProfile": {
+                  "computerName": "web1-vm",
+                  "adminUsername": "[variables('username')]",
+                  "adminPassword": "[variables('password')]",
+                  "customData": "[variables('webscript')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "18.04-LTS",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', 'web1-vm-nic')]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'web1-vm-nic')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2020-11-01",
+              "name": "web2-vm-nic",
+              "location": "[variables('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Static",
+                      "privateIPAddress": "10.0.32.5",
+                      "subnet": {
+                        "id": "[parameters('webSubnetId')]"
+                      },
+                      "loadBalancerBackendAddressPools": [
+                        {
+                          "id": "[parameters('webLbPoolId')]"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2020-12-01",
+              "name": "web2-vm",
+              "location": "[variables('location')]",
+              "zones": [
+                "2"
+              ],
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[variables('size')]"
+                },
+                "osProfile": {
+                  "computerName": "web2-vm",
+                  "adminUsername": "[variables('username')]",
+                  "adminPassword": "[variables('password')]",
+                  "customData": "[variables('webscript')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "18.04-LTS",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', 'web2-vm-nic')]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', 'web2-vm-nic')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    }
+  ]
+}
