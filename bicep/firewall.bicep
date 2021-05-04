@@ -48,6 +48,10 @@ resource fwBasePolicy 'Microsoft.Network/firewallPolicies@2020-07-01' = {
 
 resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-07-01' = {
   name: 'fw-policy'
+  dependsOn: [
+    fwBasePolicy
+    fwBasesRulesApp
+  ]
   location: location
   identity: {
     type: 'UserAssigned'
@@ -77,9 +81,6 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-07-01' = {
 
 resource fwBasesRulesApp 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2020-11-01' = {
   name: '${fwBasePolicy.name}/DefaultApplicationRuleCollectionGroup'
-  dependsOn: [
-    fwRulesNet
-  ]
   properties: {
     priority: 300
     ruleCollections: [

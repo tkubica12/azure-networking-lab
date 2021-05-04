@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "2856919026624583164"
+      "templateHash": "15285402254870207115"
     }
   },
   "functions": [],
@@ -31,7 +31,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "3590299018597158573"
+              "templateHash": "12750644617735686381"
             }
           },
           "parameters": {
@@ -75,15 +75,9 @@
                     }
                   },
                   {
-                    "name": "ngfw-int",
+                    "name": "dmz",
                     "properties": {
                       "addressPrefix": "10.0.3.0/26"
-                    }
-                  },
-                  {
-                    "name": "ngfw-ext",
-                    "properties": {
-                      "addressPrefix": "10.0.3.64/26"
                     }
                   },
                   {
@@ -134,7 +128,7 @@
                         "id": "[resourceId('Microsoft.Network/routeTables', 'defaultRoutes')]"
                       },
                       "privateEndpointNetworkPolicies": "Disabled",
-                      "privateLinkServiceNetworkPolicies": "Enabled"
+                      "privateLinkServiceNetworkPolicies": "Disabled"
                     }
                   },
                   {
@@ -171,7 +165,9 @@
                       },
                       "routeTable": {
                         "id": "[resourceId('Microsoft.Network/routeTables', 'defaultRoutes')]"
-                      }
+                      },
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Disabled"
                     }
                   },
                   {
@@ -488,6 +484,37 @@
               ]
             },
             {
+              "type": "Microsoft.Network/privateLinkServices",
+              "apiVersion": "2020-06-01",
+              "name": "lb-private-link-service",
+              "location": "[variables('location')]",
+              "properties": {
+                "enableProxyProtocol": false,
+                "loadBalancerFrontendIpConfigurations": [
+                  {
+                    "id": "[reference(resourceId('Microsoft.Network/loadBalancers', 'web-lb')).frontendIPConfigurations[0].id]"
+                  }
+                ],
+                "ipConfigurations": [
+                  {
+                    "name": "application-configuration",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "privateIPAddressVersion": "IPv4",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/sub1', resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net'))]"
+                      },
+                      "primary": false
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]",
+                "[resourceId('Microsoft.Network/loadBalancers', 'web-lb')]"
+              ]
+            },
+            {
               "type": "Microsoft.Network/privateDnsZones",
               "apiVersion": "2020-06-01",
               "name": "net.demo",
@@ -497,6 +524,12 @@
               "type": "Microsoft.Network/privateDnsZones",
               "apiVersion": "2020-06-01",
               "name": "privatelink.database.windows.net",
+              "location": "global"
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "privatelink.azurewebsites.net",
               "location": "global"
             },
             {
@@ -528,6 +561,22 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/hub-net', 'privatelink.azurewebsites.net')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurewebsites.net')]",
                 "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
               ]
             },
@@ -566,6 +615,22 @@
             {
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
               "apiVersion": "2018-09-01",
+              "name": "[format('{0}/spoke1-net', 'privatelink.azurewebsites.net')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurewebsites.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
               "name": "[format('{0}/spoke2-net', 'net.demo')]",
               "location": "global",
               "properties": {
@@ -592,6 +657,22 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/spoke2-net', 'privatelink.azurewebsites.net')]",
+              "location": "global",
+              "properties": {
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
+                },
+                "registrationEnabled": false
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurewebsites.net')]",
                 "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
               ]
             }
@@ -632,6 +713,14 @@
             "spoke2Sub1NsgId": {
               "type": "string",
               "value": "[resourceId('Microsoft.Network/networkSecurityGroups', 'spoke2-sub1-nsg')]"
+            },
+            "plinkServiceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateLinkServices', 'lb-private-link-service')]"
+            },
+            "webAppDnsZoneId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.azurewebsites.net')]"
             }
           }
         }
@@ -1075,7 +1164,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "11710839209497686109"
+              "templateHash": "4526405197942991392"
             }
           },
           "parameters": {
@@ -1173,6 +1262,7 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]",
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-base-policy'), '/')[0], split(format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-base-policy'), '/')[1])]",
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]",
                 "[resourceId('Microsoft.Resources/deploymentScripts', 'scriptCreateCertificate')]"
               ]
@@ -1218,8 +1308,7 @@
                 ]
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]",
-                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[0], split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[1])]"
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]"
               ]
             },
             {
@@ -1758,6 +1847,581 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
+      "name": "frontdoor",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "logWorkspaceResourceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2019-10-01').outputs.logWorkspaceResourceId.value]"
+          },
+          "plinkServiceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.plinkServiceId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "10954223102332987324"
+            }
+          },
+          "parameters": {
+            "plinkServiceId": {
+              "type": "string"
+            },
+            "logWorkspaceResourceId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Cdn/profiles",
+              "apiVersion": "2020-09-01",
+              "name": "frontdoor-profile",
+              "location": "global",
+              "sku": {
+                "name": "Premium_AzureFrontDoor"
+              }
+            },
+            {
+              "type": "Microsoft.Cdn/profiles/afdEndpoints",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}', 'frontdoor-profile', format('fd-lb-plink{0}', uniqueString(resourceGroup().id)))]",
+              "location": "global",
+              "properties": {
+                "originResponseTimeoutSeconds": 240,
+                "enabledState": "Enabled"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Cdn/profiles/afdEndpoints",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}', 'frontdoor-profile', format('fd-appgw-plink{0}', uniqueString(resourceGroup().id)))]",
+              "location": "global",
+              "properties": {
+                "originResponseTimeoutSeconds": 240,
+                "enabledState": "Enabled"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Cdn/profiles/originGroups",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}', 'frontdoor-profile', 'web-lb')]",
+              "properties": {
+                "loadBalancingSettings": {
+                  "sampleSize": 4,
+                  "successfulSamplesRequired": 3
+                },
+                "healthProbeSettings": {
+                  "probePath": "/",
+                  "probeRequestType": "GET",
+                  "probeProtocol": "Http",
+                  "probeIntervalInSeconds": 100
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Cdn/profiles/originGroups",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}', 'frontdoor-profile', 'web-appgw')]",
+              "properties": {
+                "loadBalancingSettings": {
+                  "sampleSize": 4,
+                  "successfulSamplesRequired": 3
+                },
+                "healthProbeSettings": {
+                  "probePath": "/",
+                  "probeRequestType": "GET",
+                  "probeProtocol": "Http",
+                  "probeIntervalInSeconds": 100
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Cdn/profiles/originGroups/origins",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}/{2}', 'frontdoor-profile', 'web-lb', 'web-lb')]",
+              "properties": {
+                "hostName": "10.0.32.100",
+                "httpPort": 80,
+                "httpsPort": 443,
+                "originHostHeader": "10.0.32.100",
+                "priority": 1,
+                "weight": 1000,
+                "sharedPrivateLinkResource": {
+                  "privateLinkLocation": "eastus",
+                  "requestMessage": "This is authorization from Front Door",
+                  "privateLink": {
+                    "id": "[parameters('plinkServiceId')]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', 'frontdoor-profile', 'web-lb')]",
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Cdn/profiles/afdEndpoints/routes",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}/{2}', 'frontdoor-profile', format('fd-lb-plink{0}', uniqueString(resourceGroup().id)), 'web-route')]",
+              "properties": {
+                "originGroup": {
+                  "id": "[resourceId('Microsoft.Cdn/profiles/originGroups', 'frontdoor-profile', 'web-lb')]"
+                },
+                "supportedProtocols": [
+                  "Http",
+                  "Https"
+                ],
+                "patternsToMatch": [
+                  "/*"
+                ],
+                "compressionSettings": {
+                  "contentTypesToCompress": [
+                    "application/eot",
+                    "application/font",
+                    "application/font-sfnt",
+                    "application/javascript",
+                    "application/json",
+                    "application/opentype",
+                    "application/otf",
+                    "application/pkcs7-mime",
+                    "application/truetype",
+                    "application/ttf",
+                    "application/vnd.ms-fontobject",
+                    "application/xhtml+xml",
+                    "application/xml",
+                    "application/xml+rss",
+                    "application/x-font-opentype",
+                    "application/x-font-truetype",
+                    "application/x-font-ttf",
+                    "application/x-httpd-cgi",
+                    "application/x-javascript",
+                    "application/x-mpegurl",
+                    "application/x-opentype",
+                    "application/x-otf",
+                    "application/x-perl",
+                    "application/x-ttf",
+                    "font/eot",
+                    "font/ttf",
+                    "font/otf",
+                    "font/opentype",
+                    "image/svg+xml",
+                    "text/css",
+                    "text/csv",
+                    "text/html",
+                    "text/javascript",
+                    "text/js",
+                    "text/plain",
+                    "text/richtext",
+                    "text/tab-separated-values",
+                    "text/xml",
+                    "text/x-script",
+                    "text/x-component",
+                    "text/x-java-source"
+                  ],
+                  "isCompressionEnabled": false
+                },
+                "queryStringCachingBehavior": "NotSet",
+                "forwardingProtocol": "HttpOnly",
+                "linkToDefaultDomain": "Enabled",
+                "httpsRedirect": "Enabled",
+                "enabledState": "Enabled"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', 'frontdoor-profile', format('fd-lb-plink{0}', uniqueString(resourceGroup().id)))]",
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', 'frontdoor-profile', 'web-lb')]",
+                "[resourceId('Microsoft.Cdn/profiles/originGroups/origins', 'frontdoor-profile', 'web-lb', 'web-lb')]",
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
+              "type": "microsoft.insights/diagnosticSettings",
+              "apiVersion": "2017-05-01-preview",
+              "scope": "[format('Microsoft.Cdn/profiles/{0}', 'frontdoor-profile')]",
+              "name": "logs",
+              "properties": {
+                "workspaceId": "[parameters('logWorkspaceResourceId')]",
+                "logs": [
+                  {
+                    "category": "FrontDoorAccessLog",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 0,
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "category": "FrontDoorHealthProbeLog",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 0,
+                      "enabled": false
+                    }
+                  },
+                  {
+                    "category": "FrontDoorWebApplicationFirewallLog",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "days": 0,
+                      "enabled": false
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'monitoring')]",
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "appgw",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "subnetId": {
+            "value": "[format('{0}/subnets/rp', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "16474008542534248040"
+            }
+          },
+          "parameters": {
+            "subnetId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2020-11-01",
+              "name": "appgw-ip",
+              "location": "[variables('location')]",
+              "zones": [
+                "1",
+                "2",
+                "3"
+              ],
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static"
+              }
+            },
+            {
+              "type": "Microsoft.Network/applicationGateways",
+              "apiVersion": "2020-11-01",
+              "name": "appgw",
+              "location": "[variables('location')]",
+              "zones": [
+                "1",
+                "2",
+                "3"
+              ],
+              "properties": {
+                "sku": {
+                  "name": "WAF_v2",
+                  "tier": "WAF_v2"
+                },
+                "gatewayIPConfigurations": [
+                  {
+                    "name": "appGatewayIpConfig",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      }
+                    }
+                  }
+                ],
+                "frontendIPConfigurations": [
+                  {
+                    "name": "appGwPrivateFrontendIp",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      },
+                      "privateIPAddress": "10.0.3.132",
+                      "privateIPAllocationMethod": "Static"
+                    }
+                  },
+                  {
+                    "name": "appGwPublicFrontendIp",
+                    "properties": {
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'appgw-ip')]"
+                      }
+                    }
+                  }
+                ],
+                "frontendPorts": [
+                  {
+                    "name": "port_80",
+                    "properties": {
+                      "port": 80
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "web-servers",
+                    "properties": {
+                      "backendAddresses": [
+                        {
+                          "ipAddress": "10.0.32.4"
+                        },
+                        {
+                          "ipAddress": "10.0.32.5"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "backendHttpSettingsCollection": [
+                  {
+                    "name": "backend-settings",
+                    "properties": {
+                      "port": 80,
+                      "protocol": "Http",
+                      "cookieBasedAffinity": "Disabled",
+                      "requestTimeout": 20
+                    }
+                  }
+                ],
+                "httpListeners": [
+                  {
+                    "name": "private-http",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', 'appgw', 'appGwPrivateFrontendIp')]"
+                      },
+                      "frontendPort": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', 'appgw', 'port_80')]"
+                      },
+                      "protocol": "Http"
+                    }
+                  }
+                ],
+                "requestRoutingRules": [
+                  {
+                    "name": "web-rule",
+                    "properties": {
+                      "ruleType": "Basic",
+                      "httpListener": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', 'appgw', 'private-http')]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', 'appgw', 'web-servers')]"
+                      },
+                      "backendHttpSettings": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', 'appgw', 'backend-settings')]"
+                      }
+                    }
+                  }
+                ],
+                "enableHttp2": true,
+                "autoscaleConfiguration": {
+                  "minCapacity": 0,
+                  "maxCapacity": 2
+                },
+                "webApplicationFirewallConfiguration": {
+                  "enabled": true,
+                  "firewallMode": "Prevention",
+                  "ruleSetType": "OWASP",
+                  "ruleSetVersion": "3.0"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'appgw-ip')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "webapp",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "integrationSubnetId": {
+            "value": "[format('{0}/subnets/paas-integration-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetId.value)]"
+          },
+          "plinkSubnetId": {
+            "value": "[format('{0}/subnets/dmz', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+          },
+          "dnsZoneId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.webAppDnsZoneId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.3.255.40792",
+              "templateHash": "6917166563990146244"
+            }
+          },
+          "parameters": {
+            "integrationSubnetId": {
+              "type": "string"
+            },
+            "plinkSubnetId": {
+              "type": "string"
+            },
+            "dnsZoneId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "location": "[resourceGroup().location]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2020-12-01",
+              "name": "app-service-plan",
+              "location": "[variables('location')]",
+              "kind": "app",
+              "properties": {
+                "targetWorkerSizeId": 3,
+                "targetWorkerCount": 1
+              },
+              "sku": {
+                "name": "P1v2",
+                "tier": "PremiumV2"
+              }
+            },
+            {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2020-12-01",
+              "name": "[format('web-{0}', uniqueString(resourceGroup().id))]",
+              "location": "[variables('location')]",
+              "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'app-service-plan')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', 'app-service-plan')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Web/sites/networkConfig",
+              "apiVersion": "2020-10-01",
+              "name": "[format('{0}/{1}', format('web-{0}', uniqueString(resourceGroup().id)), 'virtualNetwork')]",
+              "properties": {
+                "subnetResourceId": "[parameters('integrationSubnetId')]",
+                "swiftSupported": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', format('web-{0}', uniqueString(resourceGroup().id)))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateEndpoints",
+              "apiVersion": "2020-11-01",
+              "name": "plink-webapp",
+              "location": "[variables('location')]",
+              "properties": {
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "plink-webapp",
+                    "properties": {
+                      "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', format('web-{0}', uniqueString(resourceGroup().id)))]",
+                      "groupIds": [
+                        "sites"
+                      ]
+                    }
+                  }
+                ],
+                "subnet": {
+                  "id": "[parameters('plinkSubnetId')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', format('web-{0}', uniqueString(resourceGroup().id)))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}/{1}', 'plink-webapp', 'default')]",
+              "properties": {
+                "privateDnsZoneConfigs": [
+                  {
+                    "name": "privatelink-azurewebsites-net",
+                    "properties": {
+                      "privateDnsZoneId": "[parameters('dnsZoneId')]"
+                    }
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', 'plink-webapp')]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
       "name": "vms",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1785,7 +2449,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "12952560034850503365"
+              "templateHash": "13822508692963177489"
             }
           },
           "parameters": {
@@ -1808,7 +2472,7 @@
             "size": "Standard_B1ms",
             "username": "tomas",
             "password": "Azure12345678",
-            "webscript": "Y2F0ID4gL2V0Yy9zeXN0ZW1kL3N5c3RlbS9teXdlYi5zZXJ2aWNlIDw8IEVPRgpbVW5pdF0KRGVzY3JpcHRpb249TXlXZWIKCltTZXJ2aWNlXQpFeGVjU3RhcnQ9L215d2ViLnNoCgpbSW5zdGFsbF0KV2FudGVkQnk9bXVsdGktdXNlci50YXJnZXQKRU9GCgpjYXQgPiAvbXl3ZWIuc2ggPDwgRU9GCiMhL2Jpbi9iYXNoCndoaWxlIHRydWUKZG8gZWNobyAtZSAiSFRUUC8xLjEgMjAwIE9LXG5cbiBNeVdFQjogJChkYXRlKSIgfCBuYyAtbCAtdyAxIDgwCmRvbmUKRU9GCgpjaG1vZCAreCAvbXl3ZWIuc2gKc3lzdGVtY3RsIGVuYWJsZSBteXdlYgpzeXN0ZW1jdGwgc3RhcnQgbXl3ZWIK"
+            "webscript": "IyEvYmluL2Jhc2gKc3VkbyBhcHQgdXBkYXRlICYmIGFwdCBpbnN0YWxsIG5naW54IC15CmVjaG8gSGVsbG8gZnJvbSAkKGhvc3RuYW1lKSA+IC92YXIvd3d3L2h0bWwvaW5kZXguaHRtbA=="
           },
           "resources": [
             {
@@ -2078,7 +2742,10 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+        "[resourceId('Microsoft.Resources/deployments', 'firewall')]",
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]",
+        "[resourceId('Microsoft.Resources/deployments', 'peerSpoke1')]",
+        "[resourceId('Microsoft.Resources/deployments', 'peerSpoke2')]"
       ]
     }
   ]

@@ -57,8 +57,39 @@ module monitoring 'monitoring.bicep' = {
   }
 }
 
+module frontdoor 'frontdoor.bicep' = {
+  name: 'frontdoor'
+  params: {
+    logWorkspaceResourceId: monitoring.outputs.logWorkspaceResourceId
+    plinkServiceId: networks.outputs.plinkServiceId
+    plinkAppGwId: webapp.outputs.webAppPlinkId
+    webAppUrl: webapp.outputs.webAppUrl
+  }
+}
+
+module appgw 'appgw.bicep' = {
+  name: 'appgw'
+  params: {
+    subnetId: '${networks.outputs.hubNetId}/subnets/rp'
+  }
+}
+
+module webapp 'webapp.bicep' = {
+  name: 'webapp'
+  params: {
+    integrationSubnetId: '${networks.outputs.spoke2NetId}/subnets/paas-integration-sub'
+    plinkSubnetId: '${networks.outputs.hubNetId}/subnets/dmz'
+    dnsZoneId: networks.outputs.webAppDnsZoneId
+  }
+}
+
 module vms 'vms.bicep' = {
   name: 'vms'
+  dependsOn: [
+    peerSpoke1
+    peerSpoke2
+    firewall
+  ]
   params: {
     jumpSubnetId: '${networks.outputs.hubNetId}/subnets/jumpserver-sub' 
     hubSubnetId: '${networks.outputs.hubNetId}/subnets/sharedservices-sub' 

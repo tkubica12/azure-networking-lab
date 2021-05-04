@@ -32,15 +32,9 @@ resource hubNet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
         }
       }
       {
-        name: 'ngfw-int'
+        name: 'dmz'
         properties: {
           addressPrefix: '10.0.3.0/26'
-        }
-      }
-      {
-        name: 'ngfw-ext'
-        properties: {
-          addressPrefix: '10.0.3.64/26'
         }
       }
       {
@@ -86,7 +80,7 @@ resource spoke1Net 'Microsoft.Network/virtualNetworks@2020-11-01' = {
             id: defaultRoutes.id
           }
           privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
       {
@@ -119,6 +113,8 @@ resource spoke2Net 'Microsoft.Network/virtualNetworks@2020-11-01' = {
           routeTable: {
             id: defaultRoutes.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
       {
@@ -427,6 +423,32 @@ resource webLb 'Microsoft.Network/loadBalancers@2020-11-01' = {
   }
 }
 
+resource privateLinkService 'Microsoft.Network/privateLinkServices@2020-06-01' = {
+  name: 'lb-private-link-service'
+  location: location
+  properties: {
+    enableProxyProtocol: false
+    loadBalancerFrontendIpConfigurations: [
+      {
+        id: webLb.properties.frontendIPConfigurations[0].id
+      }
+    ]
+    ipConfigurations: [
+      {
+        name: 'application-configuration'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          privateIPAddressVersion: 'IPv4'
+          subnet: {
+            id: '${spoke2Net.id}/subnets/sub1' 
+          }
+          primary: false
+        }
+      }
+    ]
+  }
+}
+
 // Private DNS
 resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: 'net.demo'
@@ -435,6 +457,11 @@ resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 
 resource dnsZoneSql 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: 'privatelink.database.windows.net'
+  location: 'global'
+}
+
+resource dnsZoneWebApp 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.azurewebsites.net'
   location: 'global'
 }
 
@@ -451,6 +478,17 @@ resource dnsZoneLinkHub 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2
 
 resource dnsZoneSqlLinkHub 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
   name: '${dnsZoneSql.name}/hub-net'
+  location: 'global'
+  properties: {
+    virtualNetwork: {
+      id: hubNet.id
+    }
+    registrationEnabled: false
+  }
+}
+
+resource dnsZoneWebAppLinkHub 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+  name: '${dnsZoneWebApp.name}/hub-net'
   location: 'global'
   properties: {
     virtualNetwork: {
@@ -482,6 +520,17 @@ resource dnsZoneSqlLinkSpoke1 'Microsoft.Network/privateDnsZones/virtualNetworkL
   }
 }
 
+resource dnsZoneWebAppLinkSpoke1 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+  name: '${dnsZoneWebApp.name}/spoke1-net'
+  location: 'global'
+  properties: {
+    virtualNetwork: {
+      id: spoke1Net.id
+    }
+    registrationEnabled: false
+  }
+}
+
 resource dnsZoneLinkSpoke2 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
   name: '${dnsZone.name}/spoke2-net'
   location: 'global'
@@ -504,7 +553,16 @@ resource dnsZoneSqlLinkSpoke2 'Microsoft.Network/privateDnsZones/virtualNetworkL
   }
 }
 
-
+resource dnsZoneWebAppLinkSpoke2 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+  name: '${dnsZoneWebApp.name}/spoke2-net'
+  location: 'global'
+  properties: {
+    virtualNetwork: {
+      id: spoke2Net.id
+    }
+    registrationEnabled: false
+  }
+}
 
 output hubNetId string = hubNet.id
 output spoke1NetId string = spoke1Net.id
@@ -518,3 +576,7 @@ output webLbPoolId string = webLb.properties.backendAddressPools[0].id
 
 output spoke1Sub1NsgId string = spoke1Sub1Nsg.id
 output spoke2Sub1NsgId string = spoke2Sub1Nsg.id
+
+output plinkServiceId string = privateLinkService.id
+
+output webAppDnsZoneId string = dnsZoneWebApp.id

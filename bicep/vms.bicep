@@ -8,7 +8,7 @@ var size = 'Standard_B1ms'
 var username = 'tomas'
 var password = 'Azure12345678'
 
-var webscript = 'Y2F0ID4gL2V0Yy9zeXN0ZW1kL3N5c3RlbS9teXdlYi5zZXJ2aWNlIDw8IEVPRgpbVW5pdF0KRGVzY3JpcHRpb249TXlXZWIKCltTZXJ2aWNlXQpFeGVjU3RhcnQ9L215d2ViLnNoCgpbSW5zdGFsbF0KV2FudGVkQnk9bXVsdGktdXNlci50YXJnZXQKRU9GCgpjYXQgPiAvbXl3ZWIuc2ggPDwgRU9GCiMhL2Jpbi9iYXNoCndoaWxlIHRydWUKZG8gZWNobyAtZSAiSFRUUC8xLjEgMjAwIE9LXG5cbiBNeVdFQjogJChkYXRlKSIgfCBuYyAtbCAtdyAxIDgwCmRvbmUKRU9GCgpjaG1vZCAreCAvbXl3ZWIuc2gKc3lzdGVtY3RsIGVuYWJsZSBteXdlYgpzeXN0ZW1jdGwgc3RhcnQgbXl3ZWIK'
+var webscript = 'IyEvYmluL2Jhc2gKc3VkbyBhcHQgdXBkYXRlICYmIGFwdCBpbnN0YWxsIG5naW54IC15CmVjaG8gSGVsbG8gZnJvbSAkKGhvc3RuYW1lKSA+IC92YXIvd3d3L2h0bWwvaW5kZXguaHRtbA=='
 
 // Jump server
 resource ipJump 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
@@ -188,7 +188,7 @@ resource vmWeb1 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   }
 }
 
-// Web1 VM
+// Web2 VM
 resource nicWeb2 'Microsoft.Network/networkInterfaces@2020-11-01' = {
   name: 'web2-vm-nic'
   location: location
