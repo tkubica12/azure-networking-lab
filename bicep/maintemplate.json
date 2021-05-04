@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "15285402254870207115"
+      "templateHash": "10949064161899191333"
     }
   },
   "functions": [],
@@ -1859,6 +1859,12 @@
           },
           "plinkServiceId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.plinkServiceId.value]"
+          },
+          "plinkAppGwId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webapp'), '2019-10-01').outputs.webAppPlinkId.value]"
+          },
+          "webAppUrl": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webapp'), '2019-10-01').outputs.webAppUrl.value]"
           }
         },
         "template": {
@@ -1868,11 +1874,17 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "10954223102332987324"
+              "templateHash": "17106807472177884776"
             }
           },
           "parameters": {
             "plinkServiceId": {
+              "type": "string"
+            },
+            "plinkAppGwId": {
+              "type": "string"
+            },
+            "webAppUrl": {
               "type": "string"
             },
             "logWorkspaceResourceId": {
@@ -1981,6 +1993,30 @@
               ]
             },
             {
+              "type": "Microsoft.Cdn/profiles/originGroups/origins",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}/{2}', 'frontdoor-profile', 'web-lb', 'web-appgw')]",
+              "properties": {
+                "hostName": "[parameters('webAppUrl')]",
+                "httpPort": 80,
+                "httpsPort": 443,
+                "originHostHeader": "[parameters('webAppUrl')]",
+                "priority": 1,
+                "weight": 1000,
+                "sharedPrivateLinkResource": {
+                  "privateLinkLocation": "eastus",
+                  "requestMessage": "This is authorization from Front Door",
+                  "privateLink": {
+                    "id": "[parameters('plinkServiceId')]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', 'frontdoor-profile', 'web-lb')]",
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
               "type": "Microsoft.Cdn/profiles/afdEndpoints/routes",
               "apiVersion": "2020-09-01",
               "name": "[format('{0}/{1}/{2}', 'frontdoor-profile', format('fd-lb-plink{0}', uniqueString(resourceGroup().id)), 'web-route')]",
@@ -2055,6 +2091,80 @@
               ]
             },
             {
+              "type": "Microsoft.Cdn/profiles/afdEndpoints/routes",
+              "apiVersion": "2020-09-01",
+              "name": "[format('{0}/{1}/{2}', 'frontdoor-profile', format('fd-lb-plink{0}', uniqueString(resourceGroup().id)), 'web-route-appgw')]",
+              "properties": {
+                "originGroup": {
+                  "id": "[resourceId('Microsoft.Cdn/profiles/originGroups', 'frontdoor-profile', 'web-appgw')]"
+                },
+                "supportedProtocols": [
+                  "Http",
+                  "Https"
+                ],
+                "patternsToMatch": [
+                  "/*"
+                ],
+                "compressionSettings": {
+                  "contentTypesToCompress": [
+                    "application/eot",
+                    "application/font",
+                    "application/font-sfnt",
+                    "application/javascript",
+                    "application/json",
+                    "application/opentype",
+                    "application/otf",
+                    "application/pkcs7-mime",
+                    "application/truetype",
+                    "application/ttf",
+                    "application/vnd.ms-fontobject",
+                    "application/xhtml+xml",
+                    "application/xml",
+                    "application/xml+rss",
+                    "application/x-font-opentype",
+                    "application/x-font-truetype",
+                    "application/x-font-ttf",
+                    "application/x-httpd-cgi",
+                    "application/x-javascript",
+                    "application/x-mpegurl",
+                    "application/x-opentype",
+                    "application/x-otf",
+                    "application/x-perl",
+                    "application/x-ttf",
+                    "font/eot",
+                    "font/ttf",
+                    "font/otf",
+                    "font/opentype",
+                    "image/svg+xml",
+                    "text/css",
+                    "text/csv",
+                    "text/html",
+                    "text/javascript",
+                    "text/js",
+                    "text/plain",
+                    "text/richtext",
+                    "text/tab-separated-values",
+                    "text/xml",
+                    "text/x-script",
+                    "text/x-component",
+                    "text/x-java-source"
+                  ],
+                  "isCompressionEnabled": false
+                },
+                "queryStringCachingBehavior": "NotSet",
+                "forwardingProtocol": "HttpOnly",
+                "linkToDefaultDomain": "Enabled",
+                "httpsRedirect": "Enabled",
+                "enabledState": "Enabled"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', 'frontdoor-profile', format('fd-lb-plink{0}', uniqueString(resourceGroup().id)))]",
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', 'frontdoor-profile', 'web-appgw')]",
+                "[resourceId('Microsoft.Cdn/profiles/originGroups/origins', 'frontdoor-profile', 'web-lb', 'web-appgw')]",
+                "[resourceId('Microsoft.Cdn/profiles', 'frontdoor-profile')]"
+              ]
+            },
+            {
               "type": "microsoft.insights/diagnosticSettings",
               "apiVersion": "2017-05-01-preview",
               "scope": "[format('Microsoft.Cdn/profiles/{0}', 'frontdoor-profile')]",
@@ -2097,7 +2207,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'monitoring')]",
-        "[resourceId('Microsoft.Resources/deployments', 'networks')]"
+        "[resourceId('Microsoft.Resources/deployments', 'networks')]",
+        "[resourceId('Microsoft.Resources/deployments', 'webapp')]"
       ]
     },
     {
@@ -2311,7 +2422,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "6917166563990146244"
+              "templateHash": "14072374226635930350"
             }
           },
           "parameters": {
@@ -2412,7 +2523,17 @@
                 "[resourceId('Microsoft.Network/privateEndpoints', 'plink-webapp')]"
               ]
             }
-          ]
+          ],
+          "outputs": {
+            "webAppUrl": {
+              "type": "string",
+              "value": "[format('{0}.azurewebsites.net', format('web-{0}', uniqueString(resourceGroup().id)))]"
+            },
+            "webAppPlinkId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateEndpoints', 'plink-webapp')]"
+            }
+          }
         }
       },
       "dependsOn": [

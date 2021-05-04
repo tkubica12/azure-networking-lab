@@ -71,6 +71,7 @@ sqlcmd -S networking-demo-dbsrv-54pvmqd6pbm7c.database.windows.net -U tomas -P A
 from jump server
 ssh tomas@10.254.0.4
 
+<!-- 
 ## Check PaaS (App Service) to VNET integration
 Open globalwebregion1 WebApp and click on console
 From PaaS check connectivity to VMs in VNET:
@@ -99,4 +100,4 @@ Via Front Door:
 curl -w "Lookup: %{time_namelookup} \nConnect:%{time_connect} \n" http://networking-demo-globalniweb.azurefd.net --output /dev/null -s
 
 Directly to WebApp in West Europe:
-curl -w "Lookup: %{time_namelookup} \nConnect:%{time_connect} \n" https://networking-demo-globalwebregion1.azurewebsites.net --output /dev/null -s
+curl -w "Lookup: %{time_namelookup} \nConnect:%{time_connect} \n" https://networking-demo-globalwebregion1.azurewebsites.net --output /dev/null -s -->
