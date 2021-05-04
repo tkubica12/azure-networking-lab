@@ -35,6 +35,8 @@ resource hubNet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
         name: 'dmz'
         properties: {
           addressPrefix: '10.0.3.0/26'
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
       {
