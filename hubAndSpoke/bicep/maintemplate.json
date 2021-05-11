@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.3.255.40792",
-      "templateHash": "12312934335958859636"
+      "templateHash": "12318991978427007290"
     }
   },
   "functions": [],
@@ -31,7 +31,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.3.255.40792",
-              "templateHash": "16032210033521269769"
+              "templateHash": "1343537370680566889"
             }
           },
           "parameters": {
@@ -106,6 +106,39 @@
                 "[resourceId('Microsoft.Network/networkSecurityGroups', 'hub-rp-fw')]",
                 "[resourceId('Microsoft.Network/routeTables', 'routesFromRp')]"
               ]
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2020-11-01",
+              "name": "dalsi-sit",
+              "location": "[variables('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "192.168.0.0/16"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "subnet1",
+                    "properties": {
+                      "addressPrefix": "192.168.0.0/24"
+                    }
+                  },
+                  {
+                    "name": "subnet2",
+                    "properties": {
+                      "addressPrefix": "192.168.1.0/24"
+                    }
+                  },
+                  {
+                    "name": "subnet3",
+                    "properties": {
+                      "addressPrefix": "192.168.2.0/24"
+                    }
+                  }
+                ]
+              }
             },
             {
               "type": "Microsoft.Network/virtualNetworks",

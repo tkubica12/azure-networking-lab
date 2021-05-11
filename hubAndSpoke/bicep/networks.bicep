@@ -61,6 +61,8 @@ resource hubNet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   }
 }
 
+
+
 resource spoke1Net 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   name: 'spoke1-net'
   location: location
