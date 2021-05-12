@@ -265,3 +265,11 @@ az network nic show-effective-route-table -g $rg -n linux-vm1VMNic -o table
 ```
 
 Lastly suppose we want to send all traffic via NVA so we want to install default route 0.0.0.0/0. Note that Route Server will install it also on our NVA subnet which would break its Internet connectivity. Make sure you use UDR on NVA subnet with static route 0.0.0.0/0 -> Internet.
+
+Destroy
+
+```bash
+export rg=route-server-test-rg
+az network routeserver delete -n route-server -g $rg -y
+az group delete -n $rg -y
+```

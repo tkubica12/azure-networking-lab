@@ -308,6 +308,12 @@ resource fwRulesNet 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@202
 resource fw 'Microsoft.Network/azureFirewalls@2020-11-01' = {
   name: 'fw'
   location: location
+  dependsOn: [
+    fwBasePolicy
+    fwBasesRulesApp
+    fwRulesApp
+    fwRulesNet
+  ]
   zones: [
     '1'
     '2'
