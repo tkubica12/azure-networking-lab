@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: app1
+    labels:
+        zone: app1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: app2
+    labels:
+        zone: app2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: intruder
+    labels:
+        zone: intruder

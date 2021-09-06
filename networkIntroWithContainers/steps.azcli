@@ -84,6 +84,7 @@ az vm create -n app1-vm \
 # Check effective routes - jump cannot talk to app1 server, VNETs are not peered
 az vm show --name app1-vm --resource-group $rg    # You can get VM details including NIC name
 az network nic show-effective-route-table --name jump-vmVMNic --resource-group $rg -o table
+az network nic show-effective-route-table --name jump-vmVMNic --resource-group $rg -o table
 
 # Configure VNET peering in hub-and-spoke topology
 az network vnet peering create -g $rg -n hub-to-spoke1 \
@@ -218,7 +219,7 @@ az network lb rule create --resource-group $rg \
     --probe-name myHealthProbe
 
 # Go to jump server and test balancing
-ssh tomas@jump
+ssh tomas@$jump
     while true; do curl 10.0.32.100; done
 
 # Check how traffic looks on web1 server (open in new session window)
