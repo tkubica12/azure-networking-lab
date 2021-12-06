@@ -1,10 +1,10 @@
 # Get your lab pod number and store it together with your name
 export podNumber=1
-export podName=tomas
+export podName=demopod
 
 # ------------ Basic routing and VNET peering ------------
 # Create Resource Group
-az group create -n $podName-rg -l westeurope
+az group create -name $podName-rg --location centralus
 
 # Create VNET and subnets
 az network vnet create -g $podName-rg -n $podName-hub-net --address-prefix 10.$podNumber.0.0/20
@@ -27,7 +27,7 @@ az vm create -n $podName-jump-vm \
     -g $podName-rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -35,12 +35,12 @@ az vm create -n $podName-jump-vm \
     --subnet jumpserver-sub \
     --storage-sku Standard_LRS
 
-# Create additinal server
+# Create additional server
 az vm create -n $podName-hub-vm \
     -g $podName-rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -52,7 +52,7 @@ az vm create -n $podName-hub-vm \
 # Make sure you can connect to jump server
 az vm list-ip-addresses -g $podName-rg -o table
 export jump=$(az vm list-ip-addresses -g $podName-rg -n $podName-jump-vm --query [].virtualMachine.network.publicIpAddresses[].ipAddress -o tsv)
-ssh tomas@$jump
+ssh demouser@$jump
 
 # Create two spoke VNETs and subnets
 az network vnet create -g $podName-rg -n $podName-spoke1-net --address-prefix 10.$podNumber.16.0/20
@@ -72,7 +72,7 @@ az vm create -n $podName-app1-vm \
     -g $podName-rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -135,7 +135,7 @@ az vm create -n $podName-web1-vm \
     --image ubuntults \
     --size Standard_B1s \
     --zone 1 \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -150,7 +150,7 @@ az vm create -n $podName-web2-vm \
     --image ubuntults \
     --size Standard_B1s \
     --zone 2 \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -161,18 +161,18 @@ az vm create -n $podName-web2-vm \
     --no-wait
 
 # List effective FW rules on web1 NIC
-az network nic list-effective-nsg -g $podName-rg -n tomas-web1-vmVMNic
+az network nic list-effective-nsg -g $podName-rg -n demouser-web1-vmVMNic
 
 # Check NSGs are working. SSH from jump server - should work. 
 # On servers install Apache web service
 az vm list-ip-addresses -g $podName-rg -o table
-ssh tomas@$jump
-    ssh tomas@10.x.32.4
+ssh demouser@$jump
+    ssh demouser@10.x.32.4
         sudo apt update && sudo apt install apache2 -y   # Install web server
         echo "Server 1 is alive!" | sudo tee /var/www/html/index.html  # Change default page
         curl 127.0.0.1   # Check web works
         exit
-    ssh tomas@10.x.32.5
+    ssh demouser@10.x.32.5
         sudo apt update && sudo apt install apache2 -y   # Install web server
         echo "Server 2 is alive!" | sudo tee /var/www/html/index.html  # Change default page
         curl 127.0.0.1   # Check web works
@@ -180,9 +180,9 @@ ssh tomas@$jump
 
 # SSH from jump to share vm server
 # From there SSH to web1 (should fail) and run curl to web1 (should be ok)
-ssh tomas@$jump
-    ssh tomas@10.x.1.4
-        ssh tomas@10.x.32.4  # Should fail
+ssh demouser@$jump
+    ssh demouser@10.x.1.4
+        ssh demouser@10.x.32.4  # Should fail
         curl 10.x.32.4   # Should work
 
 # ------------ Using Azure Load Balancer ------------
@@ -212,14 +212,14 @@ az network lb rule create --resource-group $podName-rg \
     --probe-name myHealthProbe
 
 # Go to jump server and test balancing
-ssh tomas@jump
+ssh demouser@jump
     while true; do curl 10.1.32.100; done
 
 # Check how traffic looks on web1 server (open in new session window)
 # You should see health probes comming from 168.63.129.16
 # Also you should see web traffic directly to client (jump server) on 10.x.0.4
-ssh tomas@jump
-    ssh tomas@10.1.32.4
+ssh demouser@jump
+    ssh demouser@10.1.32.4
         sudo tcpdump port 80 
 
 # ------------ Connecting onpremises with VPN ------------
@@ -231,11 +231,11 @@ az network local-gateway create --gateway-ip-address $onpremVpnIp \
     --local-address-prefixes 10.254.0.0/16
 az network vpn-connection create --name $podName-to-onprem \
     --resource-group $podName-rg --vnet-gateway1 $podName-vpn \
-    -l westeurope --shared-key Azure12345678 --local-gateway2 $podName-onprem
+    -l centralus --shared-key Azure12345678 --local-gateway2 $podName-onprem
 
 # Check app1 can access onprem VM and check app1 effective routes
-ssh tomas@jump
-    ssh tomas@10.x.16.4
+ssh demouser@jump
+    ssh demouser@10.x.16.4
         ping 10.254.0.4
 
 az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
@@ -253,7 +253,7 @@ az vm create -n $podName-ngfw-vm \
     -g $podName-rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nics $podName-ngfw-nic \
@@ -261,8 +261,8 @@ az vm create -n $podName-ngfw-vm \
     --no-wait
 
 ## Configure Linux box as router and start tcpdump for host app1
-ssh tomas@$jump
-    ssh tomas@10.x.3.4
+ssh demouser@$jump
+    ssh demouser@10.x.3.4
         sudo ufw disable
         sudo sysctl -w net.ipv4.ip_forward=1
         echo net.ipv4.ip_forward = 1 | sudo tee /etc/sysctl.conf
@@ -287,8 +287,8 @@ az network vnet subnet update -g $podName-rg -n sub1 \
 
 ## Test ping to onprem from app1 - it should work.
 ## Nevertheless check effective routes on app1 - it currently goes directly bypassing Linux router
-ssh tomas@jump
-    ssh tomas@10.x.16.4
+ssh demouser@jump
+    ssh demouser@10.x.16.4
         ping 10.254.0.4
 
 az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
@@ -298,8 +298,8 @@ az network nic show-effective-route-table --name $podName-app1-vmVMNic --resourc
 az network route-table route create -g $podName-rg --route-table-name $podName-routes \
     -n toOnpremViaNGFW --next-hop-type VirtualAppliance \
     --address-prefix 10.254.0.0/16 --next-hop-ip-address 10.$podNumber.3.4
-ssh tomas@jump
-    ssh tomas@10.x.16.4
+ssh demouser@jump
+    ssh demouser@10.x.16.4
         ping 10.254.0.4
 
 az network nic show-effective-route-table --name $podName-app1-vmVMNic --resource-group $podName-rg -o table
@@ -340,8 +340,8 @@ az vm nic add -g $podName-rg --vm-name $podName-ngfw-vm \
 az vm start -n $podName-ngfw-vm -g $podName-rg
 
 ## Configure Linux router for NAT via iptables and modify its routing rules
-ssh tomas@$jump
-    ssh tomas@10.x.3.4
+ssh demouser@$jump
+    ssh demouser@10.x.3.4
         sudo ip route add 10.0.0.0/8 via 10.1.3.1 dev eth0
         sudo ip route change 0.0.0.0/0 via 10.1.3.65 dev eth1
         sudo iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
@@ -361,41 +361,41 @@ ssh tomas@$jump
 # PaaS services such as SQL network integration
 ## PaaS integration via Network Virtual Appliance
 ### Create small Azure SQL Database
-az sql server create -l westeurope -g $podName-rg \
-    -n $podName-db-srv -u tomas -p Azure12345678
+az sql server create -l centralus -g $podName-rg \
+    -n $podName-db-srv -u demouser -p Azure12345678
 az sql db create -g $podName-rg -s $podName-db-srv \
     -n $podName-db --service-objective Basic --edition Basic
 
 ### Install SqlCmd utility on app1 server. User access to DB should fail since there is no whitelist on DB firewall.
-ssh tomas@$jump
-    ssh tomas@10.x.16.4
+ssh demouser@$jump
+    ssh demouser@10.x.16.4
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
         curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
         sudo apt-get update 
         sudo apt-get install mssql-tools unixodbc-dev -y
         echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
         source ~/.bashrc
-        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should fail, not src IP is your Linux router (NGFW) IP
+        sqlcmd -S demouser-db-srv.database.windows.net -U demouser -P Azure12345678  # Should fail, not src IP is your Linux router (NGFW) IP
 
 ### Configure DB firewall to allow access from NGFW only and make sure app1 can communicate.
-export ngfwIp=$(az network public-ip show -n tomas-ngfw-ip -g $podName-rg --query ipAddress -o tsv)
+export ngfwIp=$(az network public-ip show -n demouser-ngfw-ip -g $podName-rg --query ipAddress -o tsv)
 az sql server firewall-rule create -g $podName-rg \
     -s $podName-db-srv -n allowNgfw \
     --start-ip-address $ngfwIp --end-ip-address $ngfwIp
 
 ### Check again access from app1
-ssh tomas@$jump
-    ssh tomas@10.x.16.4
-        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should work
+ssh demouser@$jump
+    ssh demouser@10.x.16.4
+        sqlcmd -S demouser-db-srv.database.windows.net -U demouser -P Azure12345678  # Should work
 
 ## Direct PaaS integration via Service Endpoint
 ### Remove Linux router IP from DB firewall
 az sql server firewall-rule delete -g $podName-rg -s $podName-db-srv -n allowNgfw
 
 ### Check again access from app1
-ssh tomas@$jump
-    ssh tomas@10.x.16.4
-        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should fail
+ssh demouser@$jump
+    ssh demouser@10.x.16.4
+        sqlcmd -S demouser-db-srv.database.windows.net -U demouser -P Azure12345678  # Should fail
 
 ### Configure direct link between subnet and PaaS with Service Endpoint
 az network vnet subnet update -g $podName-rg --vnet-name $podName-spoke1-net \
@@ -404,9 +404,9 @@ az sql server vnet-rule create -g $podName-rg -s $podName-db-srv \
     -n linkForSQL --subnet sub1 --vnet-name $podName-spoke1-net
 
 ### Check again access from app1
-ssh tomas@$jump
-    ssh tomas@10.x.16.4
-        sqlcmd -S tomas-db-srv.database.windows.net -U tomas -P Azure12345678  # Should work
+ssh demouser@$jump
+    ssh demouser@10.x.16.4
+        sqlcmd -S demouser-db-srv.database.windows.net -U demouser -P Azure12345678  # Should work
 
 ### Limit app1 access to Internet while preserving access to PaaS service
 az network nsg create -g $podName-rg -n $podName-spoke1-sub1-fw
@@ -426,7 +426,7 @@ az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
 az network nsg rule create -g $podName-rg --nsg-name $podName-spoke1-sub1-fw \
     -n allowPaasSql --priority 100 \
     --source-address-prefixes '*' --source-port-ranges '*' \
-    --destination-address-prefixes Sql.WestEurope --destination-port-ranges 1433 \
+    --destination-address-prefixes Sql.centralus --destination-port-ranges 1433 \
     --access Allow --direction Outbound \
     --protocol Tcp --description "Allow PaaS SQL traffic"
 
@@ -472,7 +472,7 @@ az vm create -n $podName-rp1-vm \
     --image ubuntults \
     --size Standard_B1s \
     --zone 1 \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg $podName-hub-rp-fw \
@@ -487,7 +487,7 @@ az vm create -n $podName-rp2-vm \
     --image ubuntults \
     --size Standard_B1s \
     --zone 2 \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg $podName-hub-rp-fw \
@@ -530,15 +530,15 @@ az network nic ip-config address-pool add -g $podName-rg \
 ## Nevertheless you can also add additional Public IP on Azure LB and create rule to point
 ## to different RP port such as 8081. This way you can for example have 2 apps
 ## running on different public IPs.
-ssh tomas@$jump
-    ssh tomas@10.x.3.132
+ssh demouser@$jump
+    ssh demouser@10.x.3.132
         sudo apt update && sudo apt install nginx -y
         sudo nano /etc/nginx/conf.d/myapp.conf  # Use following configuration - replace name with your name and proxy_pass with your webapp LB IP
 
 server {
   listen 8080;
 
-  server_name tomas-wapp998.westeurope.cloudapp.azure.com;
+  server_name demouser-wapp998.centralus.cloudapp.azure.com;
 
   location / {
       proxy_pass http://10.x.32.100/;
@@ -550,12 +550,12 @@ server {
         sudo nginx -s reload
 
 # Repeat for second NGINX (10.x.3.132)
-# Use your browser to open $podName-wapp998.westeurope.cloudapp.azure.com - should work
+# Use your browser to open $podName-wapp998.centralus.cloudapp.azure.com - should work
 
 # ------------ Automation (Infrastructure as Code) ------------
 
 # Automate environment using desired state Azure Resource Manager templates
-az group create -n $podName-new-rg -l westeurope
+az group create -n $podName-new-rg -l centralus
 ## New Hub VNET and subnets
 az group deployment create -g $podName-new-rg \
     --template-file ./ArmLabs/01net.json --parameters @./ArmLabs/01net.parameters.json

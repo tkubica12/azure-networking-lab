@@ -1,5 +1,4 @@
 param plinkServiceId string
-param plinkAppGwId string
 param webAppUrl string
 param logWorkspaceResourceId string
 

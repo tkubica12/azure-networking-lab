@@ -3,7 +3,7 @@ var location = resourceGroup().location
 // Virtual WAN
 resource vWan 'Microsoft.Network/virtualWans@2020-11-01' = {
   name: 'my-vwan'
-  location: 'westeurope'
+  location: 'CentralUS'
   properties: {
     type: 'Standard'
     allowBranchToBranchTraffic: true
@@ -11,9 +11,9 @@ resource vWan 'Microsoft.Network/virtualWans@2020-11-01' = {
   }
 }
 
-resource weHub 'Microsoft.Network/virtualHubs@2020-11-01' = {
-  name: 'we-hub'
-  location: 'westeurope'
+resource CNUSHub 'Microsoft.Network/virtualHubs@2020-11-01' = {
+  name: 'CNUS-hub'
+  location: 'CentralUS'
   properties: {
     addressPrefix: '10.0.0.0/24'
     sku: 'Standard'
@@ -23,20 +23,20 @@ resource weHub 'Microsoft.Network/virtualHubs@2020-11-01' = {
   }
 }
 
-resource weVpn 'Microsoft.Network/vpnGateways@2020-11-01' = {
-  name: 'we-vpn'
-  location: 'westeurope'
+resource CNUSVpn 'Microsoft.Network/vpnGateways@2020-11-01' = {
+  name: 'CNUS-vpn'
+  location: 'centralus'
   properties: {
     vpnGatewayScaleUnit: 1
     virtualHub: {
-      id: weHub.id
+      id: CNUSHub.id
     }
   }
 }
 
-resource neHub 'Microsoft.Network/virtualHubs@2020-11-01' = {
-  name: 'ne-hub'
-  location: 'northeurope'
+resource WUSHub 'Microsoft.Network/virtualHubs@2020-11-01' = {
+  name: 'wus-hub'
+  location: 'westus'
   properties: {
     addressPrefix: '10.1.0.0/24'
     sku: 'Standard'
@@ -46,75 +46,75 @@ resource neHub 'Microsoft.Network/virtualHubs@2020-11-01' = {
   }
 }
 
-resource neVpn 'Microsoft.Network/vpnGateways@2020-11-01' = {
-  name: 'ne-vpn'
-  location: 'northeurope'
+resource WUSVpn 'Microsoft.Network/vpnGateways@2020-11-01' = {
+  name: 'wus-vpn'
+  location: 'westus'
   properties: {
     vpnGatewayScaleUnit: 1
     virtualHub: {
-      id: neHub.id
+      id: WUSHub.id
     }
   }
 }
 
-resource weRouteTableToFirewall 'Microsoft.Network/virtualHubs/hubRouteTables@2020-11-01' = {
-  name: 'AllToFirewallWe'
-  parent: weHub
+resource wusRouteTableToFirewall 'Microsoft.Network/virtualHubs/hubRouteTables@2020-11-01' = {
+  name: 'AllToFirewallWUS'
+  parent: WUSHub
   properties: {
     routes: [
       {
-        name: 'AllToFirewallWe'
+        name: 'AllToFirewallWUS'
         destinationType: 'CIDR'
         destinations: [
           '0.0.0.0/0'
         ]
         nextHopType: 'ResourceId'
-        nextHop: fwWe.id
+        nextHop: fwWUS.id
       }
     ]
   }
 }
 
-resource weRouteTableInternalToFirewall 'Microsoft.Network/virtualHubs/hubRouteTables@2020-11-01' = {
-  name: 'InternalToFirewallWe'
-  parent: weHub
+resource wusRouteTableInternalToFirewall 'Microsoft.Network/virtualHubs/hubRouteTables@2020-11-01' = {
+  name: 'InternalToFirewallWus'
+  parent: WUSHub
   properties: {
     routes: [
       {
-        name: 'InternalToFirewallWe'
+        name: 'InternalToFirewallWus'
         destinationType: 'CIDR'
         destinations: [
           '10.0.0.0/8'
         ]
         nextHopType: 'ResourceId'
-        nextHop: fwWe.id
+        nextHop: fwWUS.id
       }
     ]
   }
 }
 
-resource neRouteTableToFirewall 'Microsoft.Network/virtualHubs/hubRouteTables@2020-11-01' = {
-  name: 'AllToFirewallNe'
-  parent: neHub
+resource CNUSRouteTableToFirewall 'Microsoft.Network/virtualHubs/hubRouteTables@2020-11-01' = {
+  name: 'AllToFirewallCNUS'
+  parent: CNUSHub
   properties: {
     routes: [
       {
-        name: 'AllToFirewallNe'
+        name: 'AllToFirewallCNUS'
         destinationType: 'CIDR'
         destinations: [
           '0.0.0.0/0'
         ]
         nextHopType: 'ResourceId'
-        nextHop: fwNe.id
+        nextHop: fwCNUS.id
       }
     ]
   }
 }
 
 // Networks
-resource weJump 'Microsoft.Network/virtualNetworks@2020-11-01' = {
-  name: 'we-jump-net'
-  location: 'westeurope'
+resource wusJump 'Microsoft.Network/virtualNetworks@2020-11-01' = {
+  name: 'wus-jump-net'
+  location: 'westus'
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -132,24 +132,24 @@ resource weJump 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   }
 }
 
-resource weJumpConnection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
-  name: 'we-jump-connection'
-  parent: weHub
+resource wusJumpConnection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
+  name: 'wus-jump-connection'
+  parent: WUSHub
   properties: {
     allowHubToRemoteVnetTransit: true
     allowRemoteVnetToUseHubVnetGateways: true
     enableInternetSecurity: true
     remoteVirtualNetwork: {
-      id: weJump.id
+      id: wusJump.id
     }
     routingConfiguration: {
       associatedRouteTable: {
-        id: weRouteTableInternalToFirewall.id
+        id: wusRouteTableInternalToFirewall.id
       }
       propagatedRouteTables: {
         ids: [
           {
-            id: weRouteTableInternalToFirewall.id
+            id: wusRouteTableInternalToFirewall.id
           }
         ]
       }
@@ -157,9 +157,9 @@ resource weJumpConnection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnec
   }
 }
 
-resource weSpoke1 'Microsoft.Network/virtualNetworks@2020-11-01' = {
-  name: 'we-spoke1-net'
-  location: 'westeurope'
+resource wusSpoke1 'Microsoft.Network/virtualNetworks@2020-11-01' = {
+  name: 'wus-spoke1-net'
+  location: 'westus'
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -177,27 +177,27 @@ resource weSpoke1 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   }
 }
 
-resource weSpoke1Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
-  name: 'we-spoke1-connection'
-  parent: weHub
+resource wusSpoke1Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
+  name: 'wus-spoke1-connection'
+  parent: WUSHub
   dependsOn: [
-    weJumpConnection
+    wusJumpConnection
   ]
   properties: {
     allowHubToRemoteVnetTransit: true
     allowRemoteVnetToUseHubVnetGateways: true
     enableInternetSecurity: true
     remoteVirtualNetwork: {
-      id: weSpoke1.id
+      id: wusSpoke1.id
     }
     routingConfiguration: {
       associatedRouteTable: {
-        id: weRouteTableToFirewall.id
+        id: wusRouteTableToFirewall.id
       }
       propagatedRouteTables: {
         ids: [
           {
-            id: weRouteTableToFirewall.id
+            id: wusRouteTableToFirewall.id
           }
         ]
       }
@@ -205,9 +205,9 @@ resource weSpoke1Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConn
   }
 }
 
-resource weSpoke2 'Microsoft.Network/virtualNetworks@2020-11-01' = {
-  name: 'we-spoke2-net'
-  location: 'westeurope'
+resource wusSpoke2 'Microsoft.Network/virtualNetworks@2020-11-01' = {
+  name: 'wus-spoke2-net'
+  location: 'westus'
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -225,28 +225,28 @@ resource weSpoke2 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   }
 }
 
-resource weSpoke2Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
-  name: 'we-spoke2-connection'
-  parent: weHub
+resource wusSpoke2Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
+  name: 'wus-spoke2-connection'
+  parent: WUSHub
   dependsOn: [
-    weJumpConnection
-    weSpoke1Connection
+    wusJumpConnection
+    wusSpoke1Connection
   ]
   properties: {
     allowHubToRemoteVnetTransit: true
     allowRemoteVnetToUseHubVnetGateways: true
     enableInternetSecurity: true
     remoteVirtualNetwork: {
-      id: weSpoke2.id
+      id: wusSpoke2.id
     }
     // routingConfiguration: {
     //   associatedRouteTable: {
-    //     id: weRouteTableToFirewall.id
+    //     id: wusRouteTableToFirewall.id
     //   }
     //   propagatedRouteTables: {
     //     ids: [
     //       {
-    //         id: weRouteTableToFirewall.id
+    //         id: wusRouteTableToFirewall.id
     //       }
     //     ]
     //   }
@@ -254,9 +254,9 @@ resource weSpoke2Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConn
   }
 }
 
-resource neSpoke1 'Microsoft.Network/virtualNetworks@2020-11-01' = {
-  name: 'ne-spoke1-net'
-  location: 'northeurope'
+resource cnusSpoke1 'Microsoft.Network/virtualNetworks@2020-11-01' = {
+  name: 'cnus-spoke1-net'
+  location: 'centralus'
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -274,29 +274,29 @@ resource neSpoke1 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   }
 }
 
-resource neSpoke1Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
-  name: 'ne-spoke1-connection'
-  parent: neHub
+resource cnusSpoke1Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
+  name: 'cnus-spoke1-connection'
+  parent: CNUSHub
   dependsOn: [
-    weJumpConnection
-    weSpoke1Connection
-    weSpoke2Connection
+    wusJumpConnection
+    wusSpoke1Connection
+    wusSpoke2Connection
   ]
   properties: {
     allowHubToRemoteVnetTransit: true
     allowRemoteVnetToUseHubVnetGateways: true
     enableInternetSecurity: true
     remoteVirtualNetwork: {
-      id: neSpoke1.id
+      id: cnusSpoke1.id
     }
     routingConfiguration: {
       associatedRouteTable: {
-        id: neRouteTableToFirewall.id
+        id: CNUSRouteTableToFirewall.id
       }
       propagatedRouteTables: {
         ids: [
           {
-            id: neRouteTableToFirewall.id
+            id: CNUSRouteTableToFirewall.id
           }
         ]
       }
@@ -304,9 +304,9 @@ resource neSpoke1Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConn
   }
 }
 
-resource neSpoke2 'Microsoft.Network/virtualNetworks@2020-11-01' = {
-  name: 'ne-spoke2-net'
-  location: 'westeurope'
+resource cnusSpoke2 'Microsoft.Network/virtualNetworks@2020-11-01' = {
+  name: 'cnus-spoke2-net'
+  location: 'centralus'
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -324,30 +324,30 @@ resource neSpoke2 'Microsoft.Network/virtualNetworks@2020-11-01' = {
   }
 }
 
-resource neSpoke2Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
-  name: 'ne-spoke2-connection'
-  parent: neHub
+resource cnusSpoke2Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2020-11-01' = {
+  name: 'cnus-spoke2-connection'
+  parent: CNUSHub
   dependsOn: [
-    weJumpConnection
-    weSpoke1Connection
-    weSpoke2Connection
-    neSpoke1Connection
+    wusJumpConnection
+    wusSpoke1Connection
+    wusSpoke2Connection
+    cnusSpoke1Connection
   ]
   properties: {
     allowHubToRemoteVnetTransit: true
     allowRemoteVnetToUseHubVnetGateways: true
     enableInternetSecurity: true
     remoteVirtualNetwork: {
-      id: neSpoke2.id
+      id: cnusSpoke2.id
     }
     routingConfiguration: {
       associatedRouteTable: {
-        id: neRouteTableToFirewall.id
+        id: CNUSRouteTableToFirewall.id
       }
       propagatedRouteTables: {
         ids: [
           {
-            id: neRouteTableToFirewall.id
+            id: CNUSRouteTableToFirewall.id
           }
         ]
       }
@@ -358,7 +358,7 @@ resource neSpoke2Connection 'Microsoft.Network/virtualHubs/hubVirtualNetworkConn
 // Azure Firewall
 resource fwPolicy 'Microsoft.Network/firewallPolicies@2020-11-01' = {
   name: 'fw-policy'
-  location: 'westeurope'
+  location: 'westus'
   properties: {
     threatIntelMode: 'Deny'
     sku: {
@@ -462,9 +462,9 @@ resource fwRulesNet 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@202
   }
 }
 
-resource fwWe 'Microsoft.Network/azureFirewalls@2020-11-01' = {
-  name: 'fw-we'
-  location: 'westeurope'
+resource fwWUS 'Microsoft.Network/azureFirewalls@2020-11-01' = {
+  name: 'fw-wus'
+  location: 'westus'
   dependsOn: [
     fwRulesApp
     fwRulesNet
@@ -483,14 +483,14 @@ resource fwWe 'Microsoft.Network/azureFirewalls@2020-11-01' = {
       }
     }
     virtualHub: {
-      id: weHub.id
+      id: WUSHub.id
     }
   } 
 }
 
-resource fwNe 'Microsoft.Network/azureFirewalls@2020-11-01' = {
-  name: 'fw-ne'
-  location: 'northeurope'
+resource fwCNUS 'Microsoft.Network/azureFirewalls@2020-11-01' = {
+  name: 'fw-cnus'
+  location: 'centralus'
   dependsOn: [
     fwRulesApp
     fwRulesNet
@@ -509,19 +509,19 @@ resource fwNe 'Microsoft.Network/azureFirewalls@2020-11-01' = {
       }
     }
     virtualHub: {
-      id: neHub.id
+      id: CNUSHub.id
     }
   } 
 }
 
 // Virtual Machines
 var size = 'Standard_B1ms'
-var username = 'tomas'
+var username = 'demouser'
 var password = 'Azure12345678'
 
 resource ipJump 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
   name: 'jumpserver-ip'
-  location: 'westeurope'
+  location: 'westus'
   properties: {
     publicIPAllocationMethod: 'Dynamic'
   }
@@ -529,7 +529,7 @@ resource ipJump 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
 
 resource nicJump 'Microsoft.Network/networkInterfaces@2020-11-01' = {
   name: 'jumpserver-nic'
-  location: 'westeurope'
+  location: 'westus'
   properties: {
     ipConfigurations: [
       {
@@ -541,7 +541,7 @@ resource nicJump 'Microsoft.Network/networkInterfaces@2020-11-01' = {
             id: ipJump.id
           }
           subnet: {
-            id: '${weJump.id}/subnets/jump'
+            id: '${wusJump.id}/subnets/jump'
           }
         }
       }
@@ -550,7 +550,7 @@ resource nicJump 'Microsoft.Network/networkInterfaces@2020-11-01' = {
 }
 resource vmJump 'Microsoft.Compute/virtualMachines@2020-12-01' = {
   name: 'jumpserver-vm'
-  location: 'westeurope'
+  location: 'westus'
   properties: {
     hardwareProfile: {
       vmSize: size
@@ -583,8 +583,8 @@ resource vmJump 'Microsoft.Compute/virtualMachines@2020-12-01' = {
 
 
 resource nic1 'Microsoft.Network/networkInterfaces@2020-11-01' = {
-  name: 'we-spoke1-nic'
-  location: 'westeurope'
+  name: 'wus-spoke1-nic'
+  location: 'westus'
   properties: {
     ipConfigurations: [
       {
@@ -593,7 +593,7 @@ resource nic1 'Microsoft.Network/networkInterfaces@2020-11-01' = {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '10.0.1.4'
           subnet: {
-            id: '${weSpoke1.id}/subnets/sub1'
+            id: '${wusSpoke1.id}/subnets/sub1'
           }
         }
       }
@@ -602,14 +602,14 @@ resource nic1 'Microsoft.Network/networkInterfaces@2020-11-01' = {
 }
 
 resource vm1 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: 'we-spoke1-vm'
-  location: 'westeurope'
+  name: 'wus-spoke1-vm'
+  location: 'westus'
   properties: {
     hardwareProfile: {
       vmSize: size
     }
     osProfile: {
-      computerName: 'we-spoke1-vm'
+      computerName: 'wus-spoke1-vm'
       adminUsername: username
       adminPassword: password
     }
@@ -635,8 +635,8 @@ resource vm1 'Microsoft.Compute/virtualMachines@2020-12-01' = {
 }
 
 resource nic2 'Microsoft.Network/networkInterfaces@2020-11-01' = {
-  name: 'ne-spoke1-nic'
-  location: 'northeurope'
+  name: 'cnus-spoke1-nic'
+  location: 'centralus'
   properties: {
     ipConfigurations: [
       {
@@ -645,7 +645,7 @@ resource nic2 'Microsoft.Network/networkInterfaces@2020-11-01' = {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: '10.1.1.4'
           subnet: {
-            id: '${neSpoke1.id}/subnets/sub1'
+            id: '${cnusSpoke1.id}/subnets/sub1'
           }
         }
       }
@@ -654,14 +654,14 @@ resource nic2 'Microsoft.Network/networkInterfaces@2020-11-01' = {
 }
 
 resource vm2 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: 'ne-spoke1-vm'
-  location: 'northeurope'
+  name: 'cnus-spoke1-vm'
+  location: 'centralus'
   properties: {
     hardwareProfile: {
       vmSize: size
     }
     osProfile: {
-      computerName: 'ne-spoke1-vm-vm'
+      computerName: 'cnus-spoke1-vm-vm'
       adminUsername: username
       adminPassword: password
     }

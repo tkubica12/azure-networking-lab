@@ -4,15 +4,15 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.3.255.40792",
-      "templateHash": "12318991978427007290"
+      "version": "0.4.1008.15138",
+      "templateHash": "11331082677829726959"
     }
   },
   "functions": [],
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "networks",
       "properties": {
         "expressionEvaluationOptions": {
@@ -30,8 +30,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "1343537370680566889"
+              "version": "0.4.1008.15138",
+              "templateHash": "3811940011766316881"
             }
           },
           "parameters": {
@@ -41,7 +41,8 @@
           },
           "functions": [],
           "variables": {
-            "location": "[resourceGroup().location]"
+            "location": "[resourceGroup().location]",
+            "azureSqlPrivateDnsZoneName": "[format('privatelink{0}', environment().suffixes.sqlServerHostname)]"
           },
           "resources": [
             {
@@ -106,39 +107,6 @@
                 "[resourceId('Microsoft.Network/networkSecurityGroups', 'hub-rp-fw')]",
                 "[resourceId('Microsoft.Network/routeTables', 'routesFromRp')]"
               ]
-            },
-            {
-              "type": "Microsoft.Network/virtualNetworks",
-              "apiVersion": "2020-11-01",
-              "name": "dalsi-sit",
-              "location": "[variables('location')]",
-              "properties": {
-                "addressSpace": {
-                  "addressPrefixes": [
-                    "192.168.0.0/16"
-                  ]
-                },
-                "subnets": [
-                  {
-                    "name": "subnet1",
-                    "properties": {
-                      "addressPrefix": "192.168.0.0/24"
-                    }
-                  },
-                  {
-                    "name": "subnet2",
-                    "properties": {
-                      "addressPrefix": "192.168.1.0/24"
-                    }
-                  },
-                  {
-                    "name": "subnet3",
-                    "properties": {
-                      "addressPrefix": "192.168.2.0/24"
-                    }
-                  }
-                ]
-              }
             },
             {
               "type": "Microsoft.Network/virtualNetworks",
@@ -558,7 +526,7 @@
             {
               "type": "Microsoft.Network/privateDnsZones",
               "apiVersion": "2020-06-01",
-              "name": "privatelink.database.windows.net",
+              "name": "[variables('azureSqlPrivateDnsZoneName')]",
               "location": "global"
             },
             {
@@ -586,7 +554,7 @@
             {
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
               "apiVersion": "2018-09-01",
-              "name": "[format('{0}/hub-net', 'privatelink.database.windows.net')]",
+              "name": "[format('{0}/hub-net', variables('azureSqlPrivateDnsZoneName'))]",
               "location": "global",
               "properties": {
                 "virtualNetwork": {
@@ -595,7 +563,7 @@
                 "registrationEnabled": false
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('azureSqlPrivateDnsZoneName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', 'hub-net')]"
               ]
             },
@@ -634,7 +602,7 @@
             {
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
               "apiVersion": "2018-09-01",
-              "name": "[format('{0}/spoke1-net', 'privatelink.database.windows.net')]",
+              "name": "[format('{0}/spoke1-net', variables('azureSqlPrivateDnsZoneName'))]",
               "location": "global",
               "properties": {
                 "virtualNetwork": {
@@ -643,7 +611,7 @@
                 "registrationEnabled": false
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('azureSqlPrivateDnsZoneName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', 'spoke1-net')]"
               ]
             },
@@ -682,7 +650,7 @@
             {
               "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
               "apiVersion": "2018-09-01",
-              "name": "[format('{0}/spoke2-net', 'privatelink.database.windows.net')]",
+              "name": "[format('{0}/spoke2-net', variables('azureSqlPrivateDnsZoneName'))]",
               "location": "global",
               "properties": {
                 "virtualNetwork": {
@@ -691,7 +659,7 @@
                 "registrationEnabled": false
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.database.windows.net')]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('azureSqlPrivateDnsZoneName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', 'spoke2-net')]"
               ]
             },
@@ -763,7 +731,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "vpns",
       "properties": {
         "expressionEvaluationOptions": {
@@ -772,7 +740,7 @@
         "mode": "Incremental",
         "parameters": {
           "hubNetId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value]"
           }
         },
         "template": {
@@ -781,8 +749,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "16852350230732992304"
+              "version": "0.4.1008.15138",
+              "templateHash": "9273527841690148968"
             }
           },
           "parameters": {
@@ -874,7 +842,7 @@
                 },
                 "gatewayType": "Vpn",
                 "vpnType": "RouteBased",
-                "enableBgp": "false"
+                "enableBgp": false
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', 'onprem-net')]",
@@ -907,7 +875,7 @@
                 },
                 "gatewayType": "Vpn",
                 "vpnType": "RouteBased",
-                "enableBgp": "false"
+                "enableBgp": false
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', 'vpn-ip')]"
@@ -954,10 +922,12 @@
               "location": "[variables('location')]",
               "properties": {
                 "virtualNetworkGateway1": {
-                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', 'vpn')]"
+                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', 'vpn')]",
+                  "properties": {}
                 },
                 "localNetworkGateway2": {
-                  "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-gw')]"
+                  "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'onprem-gw')]",
+                  "properties": {}
                 },
                 "connectionType": "IPsec",
                 "routingWeight": 10,
@@ -975,10 +945,12 @@
               "location": "[variables('location')]",
               "properties": {
                 "virtualNetworkGateway1": {
-                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', 'onprem-vpn')]"
+                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', 'onprem-vpn')]",
+                  "properties": {}
                 },
                 "localNetworkGateway2": {
-                  "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'hub-gw')]"
+                  "id": "[resourceId('Microsoft.Network/localNetworkGateways', 'hub-gw')]",
+                  "properties": {}
                 },
                 "connectionType": "IPsec",
                 "routingWeight": 10,
@@ -998,7 +970,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "peerSpoke1",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1007,16 +979,16 @@
         "mode": "Incremental",
         "parameters": {
           "hubId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value]"
           },
           "hubName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetName.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetName.value]"
           },
           "spokeId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke1NetId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke1NetId.value]"
           },
           "spokeName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke1NetName.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke1NetName.value]"
           }
         },
         "template": {
@@ -1025,8 +997,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "16168380182404330954"
+              "version": "0.4.1008.15138",
+              "templateHash": "883135828294225948"
             }
           },
           "parameters": {
@@ -1086,7 +1058,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "peerSpoke2",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1095,16 +1067,16 @@
         "mode": "Incremental",
         "parameters": {
           "hubId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value]"
           },
           "hubName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetName.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetName.value]"
           },
           "spokeId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke2NetId.value]"
           },
           "spokeName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetName.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke2NetName.value]"
           }
         },
         "template": {
@@ -1113,8 +1085,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "16168380182404330954"
+              "version": "0.4.1008.15138",
+              "templateHash": "883135828294225948"
             }
           },
           "parameters": {
@@ -1174,7 +1146,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "firewall",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1183,13 +1155,10 @@
         "mode": "Incremental",
         "parameters": {
           "fwSubnetId": {
-            "value": "[format('{0}/subnets/AzureFirewallSubnet', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+            "value": "[format('{0}/subnets/AzureFirewallSubnet', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value)]"
           },
           "logWorkspaceResourceId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2019-10-01').outputs.logWorkspaceResourceId.value]"
-          },
-          "logWorkspaceName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2019-10-01').outputs.logWorkspaceName.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2020-06-01').outputs.logWorkspaceResourceId.value]"
           }
         },
         "template": {
@@ -1198,8 +1167,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "4526405197942991392"
+              "version": "0.4.1008.15138",
+              "templateHash": "513909959486983460"
             }
           },
           "parameters": {
@@ -1207,9 +1176,6 @@
               "type": "string"
             },
             "logWorkspaceResourceId": {
-              "type": "string"
-            },
-            "logWorkspaceName": {
               "type": "string"
             }
           },
@@ -1243,7 +1209,7 @@
               "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]": {}
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity'))]": {}
                 }
               },
               "properties": {
@@ -1274,7 +1240,7 @@
               "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]": {}
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity'))]": {}
                 }
               },
               "properties": {
@@ -1570,8 +1536,12 @@
                 ]
               },
               "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-base-policy')]",
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-base-policy'), '/')[0], split(format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-base-policy'), '/')[1])]",
                 "[resourceId('Microsoft.Network/publicIPAddresses', 'fw-ip')]",
-                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-policy')]"
+                "[resourceId('Microsoft.Network/firewallPolicies', 'fw-policy')]",
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-policy'), '/')[0], split(format('{0}/DefaultApplicationRuleCollectionGroup', 'fw-policy'), '/')[1])]",
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[0], split(format('{0}/DefaultNetworkRuleCollectionGroup', 'fw-policy'), '/')[1])]"
               ]
             },
             {
@@ -1651,7 +1621,7 @@
               "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity')]": {}
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'fwIdentity'))]": {}
                 }
               },
               "properties": {
@@ -1672,7 +1642,7 @@
               ]
             },
             {
-              "type": "microsoft.insights/diagnosticSettings",
+              "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2017-05-01-preview",
               "scope": "[format('Microsoft.Network/azureFirewalls/{0}', 'fw')]",
               "name": "logs",
@@ -1725,7 +1695,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "monitoring",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1734,10 +1704,10 @@
         "mode": "Incremental",
         "parameters": {
           "spoke1Sub1NsgId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke1Sub1NsgId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke1Sub1NsgId.value]"
           },
           "spoke2Sub1NsgId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2Sub1NsgId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke2Sub1NsgId.value]"
           }
         },
         "template": {
@@ -1746,8 +1716,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "12031862214706226557"
+              "version": "0.4.1008.15138",
+              "templateHash": "12571368993735303944"
             }
           },
           "parameters": {
@@ -1881,7 +1851,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "frontdoor",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1890,16 +1860,13 @@
         "mode": "Incremental",
         "parameters": {
           "logWorkspaceResourceId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2019-10-01').outputs.logWorkspaceResourceId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'monitoring'), '2020-06-01').outputs.logWorkspaceResourceId.value]"
           },
           "plinkServiceId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.plinkServiceId.value]"
-          },
-          "plinkAppGwId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webapp'), '2019-10-01').outputs.webAppPlinkId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.plinkServiceId.value]"
           },
           "webAppUrl": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webapp'), '2019-10-01').outputs.webAppUrl.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'webapp'), '2020-06-01').outputs.webAppUrl.value]"
           }
         },
         "template": {
@@ -1908,15 +1875,12 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "17106807472177884776"
+              "version": "0.4.1008.15138",
+              "templateHash": "94940388218580548"
             }
           },
           "parameters": {
             "plinkServiceId": {
-              "type": "string"
-            },
-            "plinkAppGwId": {
               "type": "string"
             },
             "webAppUrl": {
@@ -2200,7 +2164,7 @@
               ]
             },
             {
-              "type": "microsoft.insights/diagnosticSettings",
+              "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2017-05-01-preview",
               "scope": "[format('Microsoft.Cdn/profiles/{0}', 'frontdoor-profile')]",
               "name": "logs",
@@ -2248,7 +2212,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "appgw",
       "properties": {
         "expressionEvaluationOptions": {
@@ -2257,7 +2221,7 @@
         "mode": "Incremental",
         "parameters": {
           "subnetId": {
-            "value": "[format('{0}/subnets/rp', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+            "value": "[format('{0}/subnets/rp', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value)]"
           }
         },
         "template": {
@@ -2266,8 +2230,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "16474008542534248040"
+              "version": "0.4.1008.15138",
+              "templateHash": "11491358998272177368"
             }
           },
           "parameters": {
@@ -2432,7 +2396,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "webapp",
       "properties": {
         "expressionEvaluationOptions": {
@@ -2441,13 +2405,13 @@
         "mode": "Incremental",
         "parameters": {
           "integrationSubnetId": {
-            "value": "[format('{0}/subnets/paas-integration-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetId.value)]"
+            "value": "[format('{0}/subnets/paas-integration-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke2NetId.value)]"
           },
           "plinkSubnetId": {
-            "value": "[format('{0}/subnets/dmz', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+            "value": "[format('{0}/subnets/dmz', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value)]"
           },
           "dnsZoneId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.webAppDnsZoneId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.webAppDnsZoneId.value]"
           }
         },
         "template": {
@@ -2456,8 +2420,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "14072374226635930350"
+              "version": "0.4.1008.15138",
+              "templateHash": "7735408399594950231"
             }
           },
           "parameters": {
@@ -2577,7 +2541,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
+      "apiVersion": "2020-06-01",
       "name": "vms",
       "properties": {
         "expressionEvaluationOptions": {
@@ -2586,16 +2550,16 @@
         "mode": "Incremental",
         "parameters": {
           "jumpSubnetId": {
-            "value": "[format('{0}/subnets/jumpserver-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+            "value": "[format('{0}/subnets/jumpserver-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value)]"
           },
           "hubSubnetId": {
-            "value": "[format('{0}/subnets/sharedservices-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.hubNetId.value)]"
+            "value": "[format('{0}/subnets/sharedservices-sub', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.hubNetId.value)]"
           },
           "webSubnetId": {
-            "value": "[format('{0}/subnets/sub1', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.spoke2NetId.value)]"
+            "value": "[format('{0}/subnets/sub1', reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.spoke2NetId.value)]"
           },
           "webLbPoolId": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2019-10-01').outputs.webLbPoolId.value]"
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networks'), '2020-06-01').outputs.webLbPoolId.value]"
           }
         },
         "template": {
@@ -2604,8 +2568,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.3.255.40792",
-              "templateHash": "13822508692963177489"
+              "version": "0.4.1008.15138",
+              "templateHash": "11314980963107339978"
             }
           },
           "parameters": {
@@ -2620,13 +2584,16 @@
             },
             "webLbPoolId": {
               "type": "string"
+            },
+            "username": {
+              "type": "string",
+              "defaultValue": "demouser"
             }
           },
           "functions": [],
           "variables": {
             "location": "[resourceGroup().location]",
             "size": "Standard_B1ms",
-            "username": "tomas",
             "password": "Azure12345678",
             "webscript": "IyEvYmluL2Jhc2gKc3VkbyBhcHQgdXBkYXRlICYmIGFwdCBpbnN0YWxsIG5naW54IC15CmVjaG8gSGVsbG8gZnJvbSAkKGhvc3RuYW1lKSA+IC92YXIvd3d3L2h0bWwvaW5kZXguaHRtbA=="
           },
@@ -2677,7 +2644,7 @@
                 },
                 "osProfile": {
                   "computerName": "jumpserver-vm",
-                  "adminUsername": "[variables('username')]",
+                  "adminUsername": "[parameters('username')]",
                   "adminPassword": "[variables('password')]",
                   "customData": "[variables('webscript')]"
                 },
@@ -2735,7 +2702,7 @@
                 },
                 "osProfile": {
                   "computerName": "hub-vm",
-                  "adminUsername": "[variables('username')]",
+                  "adminUsername": "[parameters('username')]",
                   "adminPassword": "[variables('password')]",
                   "customData": "[variables('webscript')]"
                 },
@@ -2801,7 +2768,7 @@
                 },
                 "osProfile": {
                   "computerName": "web1-vm",
-                  "adminUsername": "[variables('username')]",
+                  "adminUsername": "[parameters('username')]",
                   "adminPassword": "[variables('password')]",
                   "customData": "[variables('webscript')]"
                 },
@@ -2867,7 +2834,7 @@
                 },
                 "osProfile": {
                   "computerName": "web2-vm",
-                  "adminUsername": "[variables('username')]",
+                  "adminUsername": "[parameters('username')]",
                   "adminPassword": "[variables('password')]",
                   "customData": "[variables('webscript')]"
                 },

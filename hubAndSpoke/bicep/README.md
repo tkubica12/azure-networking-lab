@@ -1,9 +1,9 @@
 # Deploy
 
 ```bash
-az group create -n net -l westeurope
-az bicep build -f maintemplate.bicep
-az deployment group create -g net --template-file maintemplate.json
+az group create -n net -l centralus
+az bicep build -f  .\hubAndSpoke\bicep\maintemplate.bicep
+az deployment group create -g net --template-file .\hubAndSpoke\bicep\maintemplate.json
 ```
 
 # Destroy

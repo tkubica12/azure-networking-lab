@@ -1,4 +1,4 @@
-az group create -n central-rg -l westeurope
+az group create -n central-rg -l centralus
 az network vnet create -g central-rg -n central-net --address-prefix 10.254.0.0/16
 
 az network vnet subnet create -g central-rg --vnet-name central-net \
@@ -15,7 +15,7 @@ az vm create -n central-vm \
     -g central-rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -33,4 +33,4 @@ az network local-gateway create --gateway-ip-address $vpnIp1 \
     --local-address-prefixes $vpnRange1
 az network vpn-connection create --name central-to-$vpnIp1 \
     --resource-group central-rg --vnet-gateway1 central-vpn \
-    -l westeurope --shared-key Azure12345678 --local-gateway2 central-$vpnIp1
+    -l centralus --shared-key Azure12345678 --local-gateway2 central-$vpnIp1

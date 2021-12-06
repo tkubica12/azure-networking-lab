@@ -3,7 +3,7 @@ export rg=net-workshop
 
 # ------------ Basic routing and VNET peering ------------
 # Create Resource Group
-az group create -n $rg -l westeurope
+az group create -n $rg -l centralus
 
 # Create VNET and subnets
 az network vnet create -g $rg -n hub-net --address-prefix 10.0.0.0/20
@@ -20,7 +20,7 @@ az vm create -n jump-vm \
     -g $rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -34,7 +34,7 @@ az vm create -n hub-vm \
     -g $rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -52,7 +52,7 @@ az network vnet-gateway create -g $rg -n vpn \
 # Make sure you can connect to jump server
 az vm list-ip-addresses -g $rg -o table
 export jump=$(az vm list-ip-addresses -g $rg -n jump-vm --query [].virtualMachine.network.publicIpAddresses[].ipAddress -o tsv)
-ssh tomas@$jump
+ssh demouser@$jump
 
 # Create two spoke VNETs and subnets
 az network vnet create -g $rg -n spoke1-net --address-prefix 10.0.16.0/20
@@ -72,7 +72,7 @@ az vm create -n app1-vm \
     -g $rg \
     --image ubuntults \
     --size Standard_B1s \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -102,7 +102,7 @@ az network vnet peering create -g $rg -n spoke2-to-hub \
 
 # Check effective routes now, connect to app1 from jump server to check routing is OK
 az network nic show-effective-route-table --name jump-vmVMNic --resource-group $rg -o table
-ssh tomas@$jump 'ping -c 1 10.0.16.4'
+ssh demouser@$jump 'ping -c 1 10.0.16.4'
 
 # Note peering is not transitive - there is no access from spoke1 to spoke2 (we need routing device in hub for that - later in this lab)
 az network nic show-effective-route-table --name app1-vmVMNic --resource-group $rg -o table
@@ -142,7 +142,7 @@ az vm create -n web1-vm \
     --image ubuntults \
     --size Standard_B1s \
     --zone 1 \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -157,7 +157,7 @@ az vm create -n web2-vm \
     --image ubuntults \
     --size Standard_B1s \
     --zone 2 \
-    --admin-username tomas \
+    --admin-username demouser \
     --admin-password Azure12345678 \
     --authentication-type password \
     --nsg "" \
@@ -173,13 +173,13 @@ az network nic list-effective-nsg -g $rg -n web1-vmVMNic
 # Check NSGs are working. SSH from jump server - should work. 
 # On servers install Apache web service
 az vm list-ip-addresses -g $rg -o table
-ssh tomas@$jump
-    ssh tomas@10.0.32.4
+ssh demouser@$jump
+    ssh demouser@10.0.32.4
         sudo apt update && sudo apt install apache2 -y   # Install web server
         echo "Server 1 is alive!" | sudo tee /var/www/html/index.html  # Change default page
         curl 127.0.0.1   # Check web works
         exit
-    ssh tomas@10.0.32.5
+    ssh demouser@10.0.32.5
         sudo apt update && sudo apt install apache2 -y   # Install web server
         echo "Server 2 is alive!" | sudo tee /var/www/html/index.html  # Change default page
         curl 127.0.0.1   # Check web works
@@ -187,9 +187,9 @@ ssh tomas@$jump
 
 # SSH from jump to share vm server
 # From there SSH to web1 (should fail) and run curl to web1 (should be ok)
-ssh tomas@$jump
-    ssh tomas@10.0.1.4
-        ssh tomas@10.0.32.4  # Should fail
+ssh demouser@$jump
+    ssh demouser@10.0.1.4
+        ssh demouser@10.0.32.4  # Should fail
         curl 10.0.32.4   # Should work
 
 # ------------ Using Azure Load Balancer ------------
@@ -219,14 +219,14 @@ az network lb rule create --resource-group $rg \
     --probe-name myHealthProbe
 
 # Go to jump server and test balancing
-ssh tomas@$jump
+ssh demouser@$jump
     while true; do curl 10.0.32.100; done
 
 # Check how traffic looks on web1 server (open in new session window)
 # You should see health probes comming from 168.63.129.16
 # Also you should see web traffic directly to client (jump server) on 10.0.0.4
-ssh tomas@$jump
-    ssh tomas@10.0.32.4
+ssh demouser@$jump
+    ssh demouser@10.0.32.4
         sudo tcpdump -n port 80 
 
 
@@ -272,7 +272,7 @@ az network vnet subnet update -g $rg --vnet-name hub-net -n GatewaySubnet --rout
 az network nic show-effective-route-table --name app1-vmVMNic --resource-group $rg -o table
 
 # Firewall use implicit deny
-ssh tomas@$jump
+ssh demouser@$jump
     ssh 10.0.16.4
 
 # Allow SSH from jump to spokes
@@ -294,7 +294,7 @@ az network firewall policy rule-collection-group collection add-filter-collectio
     --rule-type NetworkRule 
 
 # Test SSH from jump
-ssh tomas@$jump
+ssh demouser@$jump
     ssh 10.0.16.4  # Should work
         ssh 10.0.0.4  # Should fail (app1 is not allowed to SSH to jump)
 
@@ -318,7 +318,7 @@ az network firewall policy rule-collection-group collection add-filter-collectio
 
 
 # Test API access
-ssh tomas@$jump
+ssh demouser@$jump
     curl 10.0.32.100  # Should fail (jump is not allowed to access API in spoke2)
     ssh 10.0.16.4 
         curl 10.0.32.100  # Should work
@@ -341,7 +341,7 @@ az network firewall policy rule-collection-group collection add-filter-collectio
     --rule-type ApplicationRule 
 
 # Test internet outbound
-ssh tomas@$jump
+ssh demouser@$jump
     ssh 10.0.16.4 
         curl ipconfig.io        # Should work
         curl httpbin.org/get    # Should fail
@@ -395,7 +395,7 @@ az network private-dns link vnet create -n link-hub --registration-enabled false
         --zone-name $zone
 
 # Connect to jump server, install Azure CLI, Kubernetes tools and connect to cluster
-ssh tomas@$jump
+ssh demouser@$jump
     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
     az login
     az account set -s tokubica
@@ -460,12 +460,12 @@ spec:
 EOF
 
 # Test service from app1
-ssh tomas@$jump
+ssh demouser@$jump
     ssh 10.0.16.4
     curl 10.0.17.100
 
 # Using network policy
-ssh tomas@$jump
+ssh demouser@$jump
     # Create apps and intruder
     cat <<EOF | kubectl apply -f -
 apiVersion: v1

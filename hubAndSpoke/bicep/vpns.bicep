@@ -76,7 +76,7 @@ resource onpremVpn 'Microsoft.Network/virtualNetworkGateways@2018-12-01' = {
     }
     gatewayType: 'Vpn'
     vpnType: 'RouteBased'
-    enableBgp: 'false'
+    enableBgp: false
   }
 }
 
@@ -104,7 +104,7 @@ resource vpn 'Microsoft.Network/virtualNetworkGateways@2018-12-01' = {
     }
     gatewayType: 'Vpn'
     vpnType: 'RouteBased'
-    enableBgp: 'false'
+    enableBgp: false
   }
 }
 
@@ -141,9 +141,14 @@ resource vpnHubOnprem 'Microsoft.Network/connections@2018-12-01' = {
   properties: {
     virtualNetworkGateway1: {
       id: vpn.id
+      properties:{
+
+      }
     }
     localNetworkGateway2: {
       id: onpremGw.id
+      properties:{
+      }
     }
     connectionType: 'IPsec'
     routingWeight: 10
@@ -157,9 +162,15 @@ resource vpnOnpremHub 'Microsoft.Network/connections@2018-12-01' = {
   properties: {
     virtualNetworkGateway1: {
       id: onpremVpn.id
+      properties:{
+
+      }
     }
     localNetworkGateway2: {
       id: hubGw.id
+      properties:{
+        
+      }
     }
     connectionType: 'IPsec'
     routingWeight: 10

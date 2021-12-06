@@ -45,7 +45,7 @@ module firewall 'firewall.bicep' = {
   params: {
     fwSubnetId: '${networks.outputs.hubNetId}/subnets/AzureFirewallSubnet' 
     logWorkspaceResourceId: monitoring.outputs.logWorkspaceResourceId
-    logWorkspaceName: monitoring.outputs.logWorkspaceName
+    
   }
 }
 
@@ -62,7 +62,6 @@ module frontdoor 'frontdoor.bicep' = {
   params: {
     logWorkspaceResourceId: monitoring.outputs.logWorkspaceResourceId
     plinkServiceId: networks.outputs.plinkServiceId
-    plinkAppGwId: webapp.outputs.webAppPlinkId
     webAppUrl: webapp.outputs.webAppUrl
   }
 }

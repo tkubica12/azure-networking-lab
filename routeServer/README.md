@@ -5,7 +5,7 @@ Create hub network
 
 ```bash
 export rg=route-server-test-rg
-az group create -n $rg -l westeurope
+az group create -n $rg -l centralus
 az network vnet create -n hub-net -g $rg --address-prefixes 10.0.0.0/16
 az network vnet subnet create -n RouteServerSubnet -g $rg --vnet-name hub-net --address-prefixes 10.0.0.0/24
 az network vnet subnet create -n NvaSubnet -g $rg --vnet-name hub-net --address-prefixes 10.0.1.0/24

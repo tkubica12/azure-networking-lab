@@ -1,6 +1,8 @@
 param fwIp string
 
 var location = resourceGroup().location
+var azureSqlPrivateDnsZoneName = 'privatelink${environment().suffixes.sqlServerHostname}'
+
 
 // VNETs
 resource hubNet 'Microsoft.Network/virtualNetworks@2020-11-01' = {
@@ -460,7 +462,7 @@ resource dnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 }
 
 resource dnsZoneSql 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.database.windows.net'
+  name: azureSqlPrivateDnsZoneName
   location: 'global'
 }
 

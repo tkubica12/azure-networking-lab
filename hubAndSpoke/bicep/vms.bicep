@@ -5,7 +5,7 @@ param webLbPoolId string
 
 var location = resourceGroup().location
 var size = 'Standard_B1ms'
-var username = 'tomas'
+param username  string= 'demouser'
 var password = 'Azure12345678'
 
 var webscript = 'IyEvYmluL2Jhc2gKc3VkbyBhcHQgdXBkYXRlICYmIGFwdCBpbnN0YWxsIG5naW54IC15CmVjaG8gSGVsbG8gZnJvbSAkKGhvc3RuYW1lKSA+IC92YXIvd3d3L2h0bWwvaW5kZXguaHRtbA=='

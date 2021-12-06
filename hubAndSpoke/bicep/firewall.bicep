@@ -1,6 +1,6 @@
 param fwSubnetId string
 param logWorkspaceResourceId string
-param logWorkspaceName string
+
 
 var location = resourceGroup().location
 
